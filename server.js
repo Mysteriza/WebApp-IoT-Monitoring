@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: ".env.local" });
 const express = require("express");
 const fetch = require("node-fetch");
 const app = express();
@@ -21,7 +21,11 @@ app.get("/api/blynk", async (req, res) => {
       pins.map((pin) =>
         fetch(
           `https://${BLYNK_SERVER}/external/api/get?token=${BLYNK_AUTH_TOKEN}&${pin}`
-        ).then((res) => res.text())
+        ).then((res) => {
+          if (!res.ok)
+            throw new Error(`Failed to fetch pin ${pin}: ${res.statusText}`);
+          return res.text();
+        })
       )
     );
 
