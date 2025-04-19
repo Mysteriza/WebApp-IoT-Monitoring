@@ -6,6 +6,7 @@
         <meta name="description"
             content="A futuristic IoT dashboard for room monitoring">
         <title>IoT Dashboard</title>
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
         <link rel="stylesheet" href="tailwind.css">
         <link rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -180,52 +181,58 @@
                 <div class="space-y-4">
                     <div>
                         <h3 class="font-medium text-cyan-300 flex items-center">
-                            <i class="fas fa-thermometer-half mr-2"></i>
-                            Temperature
-                        </h3>
-                        <p class="text-gray-300 text-sm">Room temperature in
-                            degrees Celsius.</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-cyan-300 flex items-center">
-                            <i class="fas fa-tint mr-2"></i> Humidity
-                        </h3>
-                        <p class="text-gray-300 text-sm">Air humidity in
-                            percentage.</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-cyan-300 flex items-center">
-                            <i class="fas fa-wind mr-2"></i> Gas (RAW)
-                        </h3>
-                        <p class="text-gray-300 text-sm">Raw gas value from the
-                            MQ-135 sensor (Lower is better).</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-cyan-300 flex items-center">
-                            <i class="fas fa-filter mr-2"></i> Gas (Compensated)
-                        </h3>
-                        <p class="text-gray-300 text-sm">Gas value compensated
-                            based on temperature and humidity (Lower is
-                            better).</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-cyan-300 flex items-center">
-                            <i class="fas fa-cloud mr-2"></i> Air Quality
-                        </h3>
-                        <p class="text-gray-300 text-sm">Air quality status
-                            based on compensated gas value (may be inaccurate,
-                            for reference only).</p>
+                            <i
+                                class="fas fa-thermometer-half mr-2"></-Centering>
+                                Temperature
+                            </h3>
+                            <p class="text-gray-300 text-sm">Room temperature in
+                                degrees Celsius.</p>
+                        </div>
+                        <div>
+                            <h3
+                                class="font-medium text-cyan-300 flex items-center">
+                                <i class="fas fa-tint mr-2"></i> Humidity
+                            </h3>
+                            <p class="text-gray-300 text-sm">Air humidity in
+                                percentage.</p>
+                        </div>
+                        <div>
+                            <h3
+                                class="font-medium text-cyan-300 flex items-center">
+                                <i class="fas fa-wind mr-2"></i> Gas (RAW)
+                            </h3>
+                            <p class="text-gray-300 text-sm">Raw gas value from
+                                the MQ-135 sensor (Lower is better).</p>
+                        </div>
+                        <div>
+                            <h3
+                                class="font-medium text-cyan-300 flex items-center">
+                                <i class="fas fa-filter mr-2"></i> Gas
+                                (Compensated)
+                            </h3>
+                            <p class="text-gray-300 text-sm">Gas value
+                                compensated based on temperature and humidity
+                                (Lower is better).</p>
+                        </div>
+                        <div>
+                            <h3
+                                class="font-medium text-cyan-300 flex items-center">
+                                <i class="fas fa-cloud mr-2"></i> Air Quality
+                            </h3>
+                            <p class="text-gray-300 text-sm">Air quality status
+                                based on compensated gas value (may be
+                                inaccurate, for reference only).</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Message Toast -->
-        <div id="message-toast"
-            class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg bg-gray-900 text-white shadow-lg hidden z-50 border border-cyan-400 max-w-xs text-center transition-all duration-300">
-            <span id="message-text"></span>
-        </div>
+            <!-- Message Toast -->
+            <div id="message-toast"
+                class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg bg-gray-900 text-white shadow-lg hidden z-50 border border-cyan-400 max-w-xs text-center transition-all duration-300">
+                <span id="message-text"></span>
+            </div>
 
-        <script src="script.js"></script>
-    </body>
-</html>
+            <script src="script.js"></script>
+        </body>
+    </html>
