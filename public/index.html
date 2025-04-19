@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description"
+            content="A futuristic IoT monitoring system for temperature, humidity, and air quality">
+        <title>Nexus IoT Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body class="relative overflow-x-hidden">
+        <!-- Background orbs -->
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+
+        <!-- Navbar -->
+        <nav
+            class="fixed top-0 left-0 right-0 bg-black bg-opacity-70 backdrop-filter backdrop-blur-lg z-50 flex justify-between items-center p-4 nav-glow">
+            <div class="flex items-center space-x-3">
+                <div
+                    class="status-indicator status-excellent animate-pulse"></div>
+                <h1
+                    class="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent font-['Orbitron'] tracking-wider">
+                    NEXUS DASHBOARD
+                </h1>
+            </div>
+            <div class="text-right">
+                <div id="time"
+                    class="font-['Orbitron'] text-cyan-300 text-sm md:text-base"></div>
+                <div id="date" class="text-xs md:text-sm text-gray-300"></div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 pt-24 pb-12">
+            <!-- Data Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Temperature -->
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center mb-2">
+                                <i
+                                    class="fas fa-thermometer-half text-cyan-300 mr-2"></i>
+                                <h2 class="text-lg font-medium">TEMPERATURE</h2>
+                            </div>
+                            <p id="temperature"
+                                class="data-value text-4xl font-bold temp-cool">--
+                                °C</p>
+                        </div>
+                        <div class="status-indicator status-good"></div>
+                    </div>
+                    <div
+                        class="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="temp-bar"
+                            class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"
+                            style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Humidity -->
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-tint text-cyan-300 mr-2"></i>
+                                <h2 class="text-lg font-medium">HUMIDITY</h2>
+                            </div>
+                            <p id="humidity"
+                                class="data-value text-4xl font-bold humidity-optimal">--
+                                %</p>
+                        </div>
+                        <div class="status-indicator status-good"></div>
+                    </div>
+                    <div
+                        class="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="humidity-bar"
+                            class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"
+                            style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Gas RAW -->
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-wind text-cyan-300 mr-2"></i>
+                                <h2 class="text-lg font-medium">GAS (RAW)</h2>
+                            </div>
+                            <p id="gas-raw"
+                                class="data-value text-4xl font-bold">--</p>
+                        </div>
+                        <div class="status-indicator status-good"></div>
+                    </div>
+                    <div
+                        class="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="gas-raw-bar"
+                            class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"
+                            style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Gas Compensated -->
+                <div class="glass-card rounded-xl p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-filter text-cyan-300 mr-2"></i>
+                                <h2 class="text-lg font-medium">GAS
+                                    (COMPENSATED)</h2>
+                            </div>
+                            <p id="gas-compensated"
+                                class="data-value text-4xl font-bold">-- ppm</p>
+                        </div>
+                        <div class="status-indicator status-good"></div>
+                    </div>
+                    <div
+                        class="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="gas-compensated-bar"
+                            class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"
+                            style="width: 50%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Air Quality Status -->
+            <div class="glass-card rounded-xl p-6 mb-8">
+                <div
+                    class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div class="mb-4 md:mb-0">
+                        <div class="flex items-center">
+                            <i class="fas fa-cloud text-cyan-300 mr-2"></i>
+                            <h2 class="text-lg font-medium">AIR QUALITY
+                                STATUS</h2>
+                            <div
+                                class="status-indicator status-good ml-3"></div>
+                        </div>
+                        <p id="air-quality-status"
+                            class="text-2xl font-bold text-cyan-300 mt-2">--</p>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="text-sm text-gray-300">Real-time monitoring
+                            active</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Updated & Controls -->
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p id="last-updated" class="text-gray-400 mb-4 md:mb-0">Last
+                    Updated: --</p>
+                <div class="flex space-x-4">
+                    <button id="refresh-button"
+                        class="btn-neon px-6 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-sync mr-2"></i> Refresh Data
+                    </button>
+                    <button id="info-button"
+                        class="glass-card px-6 py-2 rounded-lg font-medium border border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:bg-opacity-10 transition-all duration-300">
+                        <i class="fas fa-info-circle mr-2"></i> Info
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div id="info-modal"
+            class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+            <div
+                class="glass-card rounded-xl p-6 max-w-md w-full mx-4 modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-cyan-300">DATA
+                        EXPLANATION</h2>
+                    <button
+                        class="close text-gray-400 hover:text-white text-2xl">×</button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-thermometer-half mr-2"></i>
+                            Temperature
+                        </h3>
+                        <p class="text-gray-300 text-sm">Room temperature in
+                            degrees Celsius.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-tint mr-2"></i> Humidity
+                        </h3>
+                        <p class="text-gray-300 text-sm">Air humidity in
+                            percentage.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-wind mr-2"></i> Gas (RAW)
+                        </h3>
+                        <p class="text-gray-300 text-sm">Raw gas value from the
+                            MQ-135 sensor (Lower is better).</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-filter mr-2"></i> Gas (Compensated)
+                        </h3>
+                        <p class="text-gray-300 text-sm">Gas value compensated
+                            based on temperature and humidity (Lower is
+                            better).</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-cloud mr-2"></i> Air Quality
+                        </h3>
+                        <p class="text-gray-300 text-sm">Air quality status
+                            based on compensated gas value (may be inaccurate,
+                            for reference only).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Toast -->
+        <div id="message-toast"
+            class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg bg-gray-900 text-white shadow-lg hidden z-50 border border-cyan-400 max-w-xs text-center transition-all duration-300">
+            <span id="message-text"></span>
+        </div>
+
+        <script src="script.js"></script>
+    </body>
+</html>
