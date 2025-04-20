@@ -26,7 +26,7 @@
       "headers": [
         {
           "key": "Permissions-Policy",
-          "value": "interest-cohort=()"
+          "value": "geolocation=(), microphone=(), camera=()"
         }
       ]
     }
