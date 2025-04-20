@@ -36,7 +36,7 @@
         </nav>
 
         <!-- Main Content -->
-        <div class="container mx-auto px-4 pt-24 pb-12">
+        <div class="container mx-auto px-4 pt-24">
             <!-- Data Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <!-- Temperature -->
@@ -169,7 +169,7 @@
 
         <!-- Modal -->
         <div id="info-modal"
-            class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+            class="fixed inset-0 z-50 items-center justify-center hidden modal-overlay">
             <div
                 class="glass-card rounded-xl p-6 max-w-md w-full mx-4 modal-content">
                 <div class="flex justify-between items-center mb-4">
@@ -180,59 +180,50 @@
                 </div>
                 <div class="space-y-4">
                     <div>
+                        <h3 class="font-medium text-cyan-300">Temperature</h3>
+                        <p class="text-gray-300 text-sm">Room temperature in
+                            degrees Celsius.</p>
+                    </div>
+                    <div>
                         <h3 class="font-medium text-cyan-300 flex items-center">
-                            <i
-                                class="fas fa-thermometer-half mr-2"></-Centering>
-                                Temperature
-                            </h3>
-                            <p class="text-gray-300 text-sm">Room temperature in
-                                degrees Celsius.</p>
-                        </div>
-                        <div>
-                            <h3
-                                class="font-medium text-cyan-300 flex items-center">
-                                <i class="fas fa-tint mr-2"></i> Humidity
-                            </h3>
-                            <p class="text-gray-300 text-sm">Air humidity in
-                                percentage.</p>
-                        </div>
-                        <div>
-                            <h3
-                                class="font-medium text-cyan-300 flex items-center">
-                                <i class="fas fa-wind mr-2"></i> Gas (RAW)
-                            </h3>
-                            <p class="text-gray-300 text-sm">Raw gas value from
-                                the MQ-135 sensor (Lower is better).</p>
-                        </div>
-                        <div>
-                            <h3
-                                class="font-medium text-cyan-300 flex items-center">
-                                <i class="fas fa-filter mr-2"></i> Gas
-                                (Compensated)
-                            </h3>
-                            <p class="text-gray-300 text-sm">Gas value
-                                compensated based on temperature and humidity
-                                (Lower is better).</p>
-                        </div>
-                        <div>
-                            <h3
-                                class="font-medium text-cyan-300 flex items-center">
-                                <i class="fas fa-cloud mr-2"></i> Air Quality
-                            </h3>
-                            <p class="text-gray-300 text-sm">Air quality status
-                                based on compensated gas value (may be
-                                inaccurate, for reference only).</p>
-                        </div>
+                            <i class="fas fa-tint mr-2"></i> Humidity
+                        </h3>
+                        <p class="text-gray-300 text-sm">Air humidity in
+                            percentage.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-wind mr-2"></i> Gas (RAW)
+                        </h3>
+                        <p class="text-gray-300 text-sm">Raw gas value from the
+                            MQ-135 sensor (Lower is better).</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-filter mr-2"></i> Gas (Compensated)
+                        </h3>
+                        <p class="text-gray-300 text-sm">Gas value compensated
+                            based on temperature and humidity (Lower is
+                            better).</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyan-300 flex items-center">
+                            <i class="fas fa-cloud mr-2"></i> Air Quality
+                        </h3>
+                        <p class="text-gray-300 text-sm">Air quality status
+                            based on compensated gas value (may be inaccurate,
+                            for reference only).</p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Message Toast -->
-            <div id="message-toast"
-                class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg bg-gray-900 text-white shadow-lg hidden z-50 border border-cyan-400 max-w-xs text-center transition-all duration-300">
-                <span id="message-text"></span>
-            </div>
+        <!-- Message Toast -->
+        <div id="message-toast"
+            class="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg bg-gray-900 text-white shadow-lg hidden z-50 border border-cyan-400 max-w-xs text-center transition-all duration-300">
+            <span id="message-text"></span>
+        </div>
 
-            <script src="script.js"></script>
-        </body>
-    </html>
+        <script src="script.js"></script>
+    </body>
+</html>

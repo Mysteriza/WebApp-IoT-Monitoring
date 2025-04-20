@@ -14,7 +14,7 @@ body {
     color: var(--light);
     margin: 0;
     padding: 0;
-    min-height: 100vh;
+    height: auto;
     overflow-x: hidden;
     background-image: 
         radial-gradient(circle at 10% 20%, rgba(123, 45, 255, 0.1) 0%, transparent 20%),
@@ -155,8 +155,16 @@ body {
     .orb-1, .orb-2 {
         display: none;
     }
-    
     .data-value {
         font-size: 1.8rem;
+    }
+    .container {
+        padding-bottom: 1rem;
+    }
+}
+
+@media (min-width: 769px) {
+    .container {
+        margin-bottom: 0;
     }
 }

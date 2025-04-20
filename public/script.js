@@ -50,7 +50,6 @@ function updateClock() {
     month: "short",
     year: "numeric",
   });
-  elements.lastUpdated.textContent = `Last Updated: ${formatTime(now)}`;
 }
 
 function updateStyles({
@@ -156,6 +155,8 @@ async function fetchData() {
     elements.airQualityStatus.textContent = data.airQualityStatus;
 
     updateStyles(data);
+    const now = new Date();
+    elements.lastUpdated.textContent = `Last Updated: ${formatTime(now)}`;
     updateClock();
     showToast("Data Updated Successfully!");
   } catch (error) {
