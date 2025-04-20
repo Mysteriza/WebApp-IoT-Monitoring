@@ -169,21 +169,34 @@ async function fetchData() {
   }
 }
 
-// Initial fetch and setup
-fetchData();
-setInterval(fetchData, 30000);
-setInterval(updateClock, 1000);
-updateClock();
+// Modal handling function
+function initializeModal() {
+  // Ensure modal is hidden on load
+  elements.infoModal.classList.add("hidden");
 
-// Event Listeners
-elements.refreshButton.addEventListener("click", fetchData);
-elements.infoButton.addEventListener("click", () =>
-  elements.infoModal.classList.remove("hidden")
-);
-elements.closeModal.addEventListener("click", () =>
-  elements.infoModal.classList.add("hidden")
-);
-elements.infoModal.addEventListener("click", (e) => {
-  if (e.target === elements.infoModal)
+  // Open modal when Info button is clicked
+  elements.infoButton.addEventListener("click", () => {
+    elements.infoModal.classList.remove("hidden");
+  });
+
+  // Close modal when close button is clicked
+  elements.closeModal.addEventListener("click", () => {
     elements.infoModal.classList.add("hidden");
+  });
+
+  // Close modal when clicking outside the modal content
+  elements.infoModal.addEventListener("click", (e) => {
+    if (e.target === elements.infoModal) {
+      elements.infoModal.classList.add("hidden");
+    }
+  });
+}
+
+// Initial fetch and setup
+document.addEventListener("DOMContentLoaded", () => {
+  fetchData();
+  setInterval(fetchData, 30000);
+  setInterval(updateClock, 1000);
+  updateClock();
+  initializeModal(); // Initialize modal behavior after DOM is loaded
 });
