@@ -24,7 +24,7 @@ const elements = {
   indoorContent: document.getElementById("indoor-content"),
   outdoorContent: document.getElementById("outdoor-content"),
   outdoorTemp: document.getElementById("outdoor-temp"),
-  outdoorHumidity: document.getElementById("outdoor-humidity-display"),
+  outdoorHumidity: document.getElementById("outdoor-humidity"),
   weatherIcon: document.getElementById("weather-icon"),
   weatherCondition: document.getElementById("weather-condition"),
   windSpeed: document.getElementById("wind-speed"),
@@ -33,7 +33,8 @@ const elements = {
   visibility: document.getElementById("visibility"),
   cloudCover: document.getElementById("cloud-cover"),
   precipitation: document.getElementById("precipitation"),
-  weatherUpdated: document.getElementById("weather-updated"),
+  weatherUpdated: document.getElementById("weather-last-updated"),
+  weatherRefreshButton: document.getElementById("weather-refresh-button"),
   weatherForecast: document.getElementById("weather-forecast")
 };
 
@@ -204,8 +205,24 @@ function switchTab(tab) {
     elements.indoorTab.classList.add("text-gray-400");
     elements.outdoorContent.classList.remove("hidden");
     elements.indoorContent.classList.add("hidden");
-    fetchWeatherData();
+    if (!elements.weatherUpdated.textContent || elements.weatherUpdated.textContent === "--") {
+      fetchWeatherData();
+    }
   }
+}
+
+function getWindDirectionFull(wd) {
+  const directions = {
+    'N': { en: 'North', id: 'Utara' },
+    'NE': { en: 'Northeast', id: 'Timur Laut' },
+    'E': { en: 'East', id: 'Timur' },
+    'SE': { en: 'Southeast', id: 'Tenggara' },
+    'S': { en: 'South', id: 'Selatan' },
+    'SW': { en: 'Southwest', id: 'Barat Daya' },
+    'W': { en: 'West', id: 'Barat' },
+    'NW': { en: 'Northwest', id: 'Barat Laut' }
+  };
+  return directions[wd] || { en: wd, id: wd };
 }
 
 async function fetchWeatherData() {
@@ -218,7 +235,8 @@ async function fetchWeatherData() {
     elements.outdoorHumidity.textContent = `${data.current.humidity} %`;
     elements.weatherCondition.textContent = data.current.condition;
     elements.windSpeed.textContent = `${data.current.windSpeed} km/h`;
-    elements.windDirection.textContent = data.current.windDirection;
+    const windDir = getWindDirectionFull(data.current.windDirection);
+    elements.windDirection.textContent = `${windDir.id} (${windDir.en})`;
     elements.windDirectionDeg.textContent = `${data.current.windDirectionDeg}°`;
     elements.visibility.textContent = `${(data.current.visibility / 1000).toFixed(1)} km`;
     elements.cloudCover.textContent = `${data.current.cloudCover} %`;
@@ -228,7 +246,7 @@ async function fetchWeatherData() {
 
     elements.weatherForecast.innerHTML = data.forecast.map(item => `
       <div class="glass-card rounded-lg p-3 text-center">
-        <div class="text-sm font-medium mb-1">${item.date || item.time}</div>
+        <div class="text-sm font-medium mb-1">${item.dateTime}</div>
         <img src="${item.icon}" alt="Forecast Icon" class="h-6 w-6 mx-auto mb-1" />
         <div class="text-base font-bold">${item.temperature}°C</div>
         <div class="text-xs">${item.condition}</div>
@@ -285,11 +303,16 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.outdoorTab.addEventListener("click", () => switchTab('outdoor'));
 
   elements.refreshButton.addEventListener("click", () => {
-    const activeTab = elements.indoorContent.classList.contains("hidden") ? 'outdoor' : 'indoor';
-    if (activeTab === 'indoor') {
-      fetchData();
-    } else {
+    fetchData();
+  });
+
+  elements.weatherRefreshButton.addEventListener("click", () => {
+    fetchWeatherData();
+  });
+
+  setInterval(() => {
+    if (!elements.outdoorContent.classList.contains("hidden")) {
       fetchWeatherData();
     }
-  });
+  }, 1200000); // 20 menit
 });

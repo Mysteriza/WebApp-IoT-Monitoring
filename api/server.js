@@ -66,20 +66,21 @@ app.get("/api/weather", async (req, res) => {
 
     const forecastsByDate = {};
     forecastData.forEach(day => {
-      const date = new Date(day[0].local_datetime).toLocaleDateString("en-US", {
+      const dateTime = new Date(day[0].local_datetime).toLocaleString("en-US", {
         day: "numeric",
         month: "short",
-        year: "numeric"
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
       });
-      if (!forecastsByDate[date]) {
-        forecastsByDate[date] = day.slice(0, 2);
+      if (!forecastsByDate[dateTime]) {
+        forecastsByDate[dateTime] = day.slice(0, 2);
       }
     });
 
-    const forecast = Object.keys(forecastsByDate).slice(0, 3).flatMap(date =>
-      forecastsByDate[date].map(item => ({
-        date,
-        time: new Date(item.local_datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    const forecast = Object.keys(forecastsByDate).slice(0, 6).flatMap(dateTime =>
+      forecastsByDate[dateTime].map(item => ({
+        dateTime,
         temperature: item.t,
         condition: item.weather_desc,
         icon: item.image
