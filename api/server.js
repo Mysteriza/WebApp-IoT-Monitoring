@@ -4,11 +4,11 @@ const fetch = require("node-fetch");
 const NodeCache = require("node-cache");
 
 const app = express();
-const cache = new NodeCache({ stdTTL: 1200 }); // Cache for 20 minutes
+const cache = new NodeCache({ stdTTL: 1200 });
 
 const BLYNK_SERVER = "blynk.cloud";
 const BLYNK_AUTH_TOKEN = process.env.BLYNK_AUTH_TOKEN;
-const PINS = ["V0", "V1", "V5", "V6", "V7"]; // Temperature, Humidity, Gas Raw, Gas Compensated, Air Quality
+const PINS = ["V0", "V1", "V5", "V6", "V7"];
 
 app.use(express.static("public"));
 
@@ -52,59 +52,61 @@ app.get("/api/blynk", async (req, res) => {
 
 app.get("/api/weather", async (req, res) => {
   try {
-    // Check cache first
     const cachedData = cache.get("weatherData");
     if (cachedData) {
       return res.json(cachedData);
     }
 
-    const response = await fetch("https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=32.73.14.1002"); //For location: Cikutra, Cibeunying Kidul, Bandung Indonesia
+    const response = await fetch("https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=32.73.14.1002");
     if (!response.ok) throw new Error("Failed to fetch from BMKG API");
-    
-    const data = await response.json();
-    const currentWeather = data.data[0].cuaca[0][0]; // Get current weather (first item)
-    const forecast = data.data[0].cuaca[0].slice(0, 4); // Get next 4 forecast items
 
-    // Format response
+    const data = await response.json();
+    const currentWeather = data.data[0].cuaca[0][0];
+    const forecastData = data.data[0].cuaca;
+
+    const forecastsByDate = {};
+    forecastData.forEach(day => {
+      const date = new Date(day[0].local_datetime).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
+      if (!forecastsByDate[date]) {
+        forecastsByDate[date] = day.slice(0, 2);
+      }
+    });
+
+    const forecast = Object.keys(forecastsByDate).slice(0, 3).flatMap(date =>
+      forecastsByDate[date].map(item => ({
+        date,
+        time: new Date(item.local_datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        temperature: item.t,
+        condition: item.weather_desc,
+        icon: item.image
+      }))
+    );
+
     const result = {
       current: {
         temperature: currentWeather.t,
         humidity: currentWeather.hu,
         condition: currentWeather.weather_desc,
         windSpeed: currentWeather.ws,
-        lastUpdate: new Date().toLocaleString()
+        cloudCover: currentWeather.tcc,
+        precipitation: currentWeather.tp,
+        lastUpdate: new Date(currentWeather.local_datetime).toLocaleString("en-US", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }),
+        icon: currentWeather.image
       },
-      forecast: forecast.map(item => {
-        const time = new Date(item.local_datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        let icon, iconColor;
-        
-        if (item.weather_desc.includes("Hujan")) {
-          icon = "fas fa-cloud-rain";
-          iconColor = "text-blue-400";
-        } else if (item.weather_desc.includes("Cerah")) {
-          icon = "fas fa-sun";
-          iconColor = "text-yellow-400";
-        } else if (item.weather_desc.includes("Berawan")) {
-          icon = "fas fa-cloud";
-          iconColor = "text-gray-400";
-        } else {
-          icon = "fas fa-cloud";
-          iconColor = "text-gray-300";
-        }
-
-        return {
-          time,
-          temperature: item.t,
-          condition: item.weather_desc,
-          icon,
-          iconColor
-        };
-      })
+      forecast
     };
 
-    // Cache the data
     cache.set("weatherData", result);
-    
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });

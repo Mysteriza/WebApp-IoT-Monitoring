@@ -28,6 +28,8 @@ const elements = {
   weatherIcon: document.getElementById("weather-icon"),
   weatherCondition: document.getElementById("weather-condition"),
   windSpeed: document.getElementById("wind-speed"),
+  cloudCover: document.getElementById("cloud-cover"),
+  precipitation: document.getElementById("precipitation"),
   weatherUpdated: document.getElementById("weather-updated"),
   weatherForecast: document.getElementById("weather-forecast")
 };
@@ -69,7 +71,6 @@ function updateStyles({
   compensatedGas,
   airQualityStatus,
 }) {
-  // Temperature
   elements.temperature.classList.remove(
     "temp-cold",
     "temp-cool",
@@ -88,7 +89,6 @@ function updateStyles({
       : "temp-hot"
   );
 
-  // Humidity
   elements.humidity.classList.remove(
     "humidity-low",
     "humidity-moderate",
@@ -109,15 +109,12 @@ function updateStyles({
       : "humidity-very-high"
   );
 
-  // Gas Raw
   const rawPercent = Math.min(Math.max((rawGas / 1023) * 100, 0), 100);
   elements.bars.gasRaw.style.width = `${rawPercent}%`;
 
-  // Gas Compensated
   const compPercent = Math.min(Math.max((compensatedGas / 1000) * 100, 0), 100);
   elements.bars.gasCompensated.style.width = `${compPercent}%`;
 
-  // Air Quality
   const statusClasses = {
     "Very Good": ["status-excellent", "text-green-400"],
     Good: ["status-good", "text-cyan-300"],
@@ -150,7 +147,6 @@ function updateStyles({
 }
 
 function updateOutdoorStyles({ temperature, humidity }) {
-  // Outdoor Temperature
   const outdoorTempPercent = Math.min(Math.max(((temperature - 10) / 30) * 100, 0), 100);
   elements.bars.outdoorTemp.style.width = `${outdoorTempPercent}%`;
   elements.outdoorTemp.classList.remove(
@@ -169,7 +165,6 @@ function updateOutdoorStyles({ temperature, humidity }) {
       : "temp-hot"
   );
 
-  // Outdoor Humidity
   elements.bars.outdoorHumidity.style.width = `${humidity}%`;
   elements.outdoorHumidity.classList.remove(
     "humidity-low",
@@ -216,31 +211,20 @@ async function fetchWeatherData() {
     if (!response.ok) throw new Error("Failed to fetch weather data");
     const data = await response.json();
 
-    // Update current weather
     elements.outdoorTemp.textContent = `${data.current.temperature} °C`;
     elements.outdoorHumidity.textContent = `${data.current.humidity} %`;
     elements.weatherCondition.textContent = data.current.condition;
     elements.windSpeed.textContent = `${data.current.windSpeed} km/h`;
-    elements.weatherUpdated.textContent = `Today at ${formatTime(new Date())}`;
+    elements.cloudCover.textContent = `${data.current.cloudCover} %`;
+    elements.precipitation.textContent = `${data.current.precipitation} mm`;
+    elements.weatherUpdated.textContent = data.current.lastUpdate;
+    elements.weatherIcon.src = data.current.icon;
 
-    // Update weather icon
-    const condition = data.current.condition.toLowerCase();
-    if (condition.includes("hujan")) {
-      elements.weatherIcon.className = "fas fa-cloud-rain text-4xl text-blue-400 mr-4";
-    } else if (condition.includes("cerah")) {
-      elements.weatherIcon.className = "fas fa-sun text-4xl text-yellow-400 mr-4";
-    } else if (condition.includes("berawan") || condition.includes("awan")) {
-      elements.weatherIcon.className = "fas fa-cloud text-4xl text-gray-400 mr-4";
-    } else if (condition.includes("petir")) {
-      elements.weatherIcon.className = "fas fa-bolt text-4xl text-purple-400 mr-4";
-    }
-
-    // Update forecast
     elements.weatherForecast.innerHTML = data.forecast.map(item => `
-      <div class="glass-card rounded-lg p-4 text-center">
-        <div class="text-sm font-medium mb-1">${item.time}</div>
-        <i class="${item.icon} text-2xl mb-1 ${item.iconColor}"></i>
-        <div class="text-lg font-bold">${item.temperature}°C</div>
+      <div class="glass-card rounded-lg p-3 text-center">
+        <div class="text-sm font-medium mb-1">${item.date || item.time}</div>
+        <img src="${item.icon}" alt="Forecast Icon" class="h-6 w-6 mx-auto mb-1" />
+        <div class="text-base font-bold">${item.temperature}°C</div>
         <div class="text-xs">${item.condition}</div>
       </div>
     `).join("");
@@ -285,18 +269,15 @@ async function fetchData() {
   }
 }
 
-// Initial fetch and setup
 document.addEventListener("DOMContentLoaded", () => {
   fetchData();
   setInterval(fetchData, 30000);
   setInterval(updateClock, 1000);
   updateClock();
 
-  // Tab event listeners
   elements.indoorTab.addEventListener("click", () => switchTab('indoor'));
   elements.outdoorTab.addEventListener("click", () => switchTab('outdoor'));
 
-  // Refresh button
   elements.refreshButton.addEventListener("click", () => {
     const activeTab = elements.indoorContent.classList.contains("hidden") ? 'outdoor' : 'indoor';
     if (activeTab === 'indoor') {
