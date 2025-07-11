@@ -199,6 +199,8 @@ body {
   border: none;
   cursor: pointer;
   outline: none;
+  display: flex;
+  align-items: center;
 }
 
 .tab-button.active {

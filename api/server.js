@@ -62,22 +62,6 @@ app.get("/api/weather", async (req, res) => {
 
     const data = await response.json();
     const currentWeather = data.data[0].cuaca[0][0];
-    const forecastData = data.data[0].cuaca;
-
-    const forecast = forecastData.flatMap(day =>
-      day.map(item => ({
-        dateTime: new Date(item.local_datetime).toLocaleString("en-US", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        }),
-        temperature: item.t,
-        condition: item.weather_desc,
-        icon: item.image
-      }))
-    );
 
     const result = {
       current: {
@@ -98,8 +82,7 @@ app.get("/api/weather", async (req, res) => {
           minute: "2-digit"
         }),
         icon: currentWeather.image
-      },
-      forecast
+      }
     };
 
     cache.set("weatherData", result);

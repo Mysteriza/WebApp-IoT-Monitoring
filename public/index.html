@@ -42,15 +42,15 @@
       <div class="flex space-x-4 mb-4">
         <button
           id="indoor-tab"
-          class="tab-button text-lg font-medium active text-cyan-300 border-b-2 border-cyan-400"
+          class="tab-button text-lg font-medium active text-cyan-300 border-b-2 border-cyan-400 flex items-center"
         >
-          INDOOR
+          <i class="fas fa-house mr-2"></i> INDOOR
         </button>
         <button
           id="outdoor-tab"
-          class="tab-button text-lg font-medium text-gray-400"
+          class="tab-button text-lg font-medium text-gray-400 flex items-center"
         >
-          OUTDOOR
+          <i class="fas fa-sun mr-2"></i> OUTDOOR
         </button>
       </div>
 
@@ -186,7 +186,7 @@
             </div>
           </div>
 
-          <div class="glass-card rounded-xl p-4">
+          <div class="glass-card rounded-xl p-6 md:col-span-2">
             <div class="flex items-center justify-between mb-2">
               <h3 class="text-lg font-medium">WEATHER CONDITION</h3>
               <img
@@ -199,7 +199,7 @@
             <div id="weather-condition" class="data-value text-xl font-bold">
               --
             </div>
-            <div class="grid grid-cols-2 gap-4 mt-4 text-sm">
+            <div class="grid grid-cols-3 gap-4 mt-4 text-sm">
               <div>
                 <div class="font-medium">Wind Speed</div>
                 <div id="wind-speed" class="text-gray-300">-- km/h</div>
@@ -209,7 +209,7 @@
                 <div id="wind-direction" class="text-gray-300">--</div>
               </div>
               <div>
-                <div class="font-medium">Wind Direction (Deg)</div>
+                <div class="font-medium">Wind Dir (Deg)</div>
                 <div id="wind-direction-deg" class="text-gray-300">--°</div>
               </div>
               <div>
@@ -224,11 +224,7 @@
                 <div class="font-medium">Precipitation</div>
                 <div id="precipitation" class="text-gray-300">-- mm</div>
               </div>
-              <div>
-                <div class="font-medium">Last Update</div>
-                <div id="weather-updated" class="text-gray-300">--</div>
-              </div>
-              <div class="col-span-2">
+              <div class="col-span-3">
                 <div class="font-medium">Location</div>
                 <div id="location" class="text-gray-300">
                   Cikutra, Cibeunying Kidul, Bandung, Indonesia
@@ -237,16 +233,8 @@
             </div>
           </div>
 
-          <div class="glass-card rounded-xl p-4">
-            <h3 class="text-lg font-medium mb-2">WEATHER FORECAST</h3>
-            <div
-              id="weather-forecast"
-              class="grid grid-cols-2 md:grid-cols-4 gap-4"
-            ></div>
-          </div>
-
           <div class="md:col-span-2 text-center">
-            <div id="weather-last-updated" class="text-sm text-gray-400 mb-2">
+            <div id="weather-updated" class="text-sm text-gray-400 mb-2">
               Last Updated: --
             </div>
             <button

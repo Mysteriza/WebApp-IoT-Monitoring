@@ -33,9 +33,8 @@ const elements = {
   visibility: document.getElementById("visibility"),
   cloudCover: document.getElementById("cloud-cover"),
   precipitation: document.getElementById("precipitation"),
-  weatherUpdated: document.getElementById("weather-last-updated"),
-  weatherRefreshButton: document.getElementById("weather-refresh-button"),
-  weatherForecast: document.getElementById("weather-forecast")
+  weatherUpdated: document.getElementById("weather-updated"),
+  weatherRefreshButton: document.getElementById("weather-refresh-button")
 };
 
 function showToast(message, isError = false) {
@@ -230,6 +229,7 @@ async function fetchWeatherData() {
     const response = await fetch("/api/weather");
     if (!response.ok) throw new Error("Failed to fetch weather data");
     const data = await response.json();
+    const now = new Date();
 
     elements.outdoorTemp.textContent = `${data.current.temperature} °C`;
     elements.outdoorHumidity.textContent = `${data.current.humidity} %`;
@@ -241,17 +241,8 @@ async function fetchWeatherData() {
     elements.visibility.textContent = `${(data.current.visibility / 1000).toFixed(1)} km`;
     elements.cloudCover.textContent = `${data.current.cloudCover} %`;
     elements.precipitation.textContent = `${data.current.precipitation} mm`;
-    elements.weatherUpdated.textContent = data.current.lastUpdate;
+    elements.weatherUpdated.textContent = `Last Updated: ${formatTime(now)}`;
     elements.weatherIcon.src = data.current.icon;
-
-    elements.weatherForecast.innerHTML = data.forecast.map(item => `
-      <div class="glass-card rounded-lg p-3 text-center">
-        <div class="text-sm font-medium mb-1">${item.dateTime}</div>
-        <img src="${item.icon}" alt="Forecast Icon" class="h-6 w-6 mx-auto mb-1" />
-        <div class="text-base font-bold">${item.temperature}°C</div>
-        <div class="text-xs">${item.condition}</div>
-      </div>
-    `).join("");
 
     updateOutdoorStyles({
       temperature: data.current.temperature,
