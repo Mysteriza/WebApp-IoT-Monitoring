@@ -15,8 +15,21 @@ const elements = {
     humidity: document.getElementById("humidity-bar"),
     gasRaw: document.getElementById("gas-raw-bar"),
     gasCompensated: document.getElementById("gas-compensated-bar"),
+    outdoorTemp: document.getElementById("outdoor-temp-bar"),
+    outdoorHumidity: document.getElementById("outdoor-humidity-bar")
   },
   statusIndicators: document.querySelectorAll(".status-indicator"),
+  indoorTab: document.getElementById("indoor-tab"),
+  outdoorTab: document.getElementById("outdoor-tab"),
+  indoorContent: document.getElementById("indoor-content"),
+  outdoorContent: document.getElementById("outdoor-content"),
+  outdoorTemp: document.getElementById("outdoor-temp"),
+  outdoorHumidity: document.getElementById("outdoor-humidity"),
+  weatherIcon: document.getElementById("weather-icon"),
+  weatherCondition: document.getElementById("weather-condition"),
+  windSpeed: document.getElementById("wind-speed"),
+  weatherUpdated: document.getElementById("weather-updated"),
+  weatherForecast: document.getElementById("weather-forecast")
 };
 
 function showToast(message, isError = false) {
@@ -136,6 +149,114 @@ function updateStyles({
   );
 }
 
+function updateOutdoorStyles({ temperature, humidity }) {
+  // Outdoor Temperature
+  const outdoorTempPercent = Math.min(Math.max(((temperature - 10) / 30) * 100, 0), 100);
+  elements.bars.outdoorTemp.style.width = `${outdoorTempPercent}%`;
+  elements.outdoorTemp.classList.remove(
+    "temp-cold",
+    "temp-cool",
+    "temp-warm",
+    "temp-hot"
+  );
+  elements.outdoorTemp.classList.add(
+    temperature < 20
+      ? "temp-cold"
+      : temperature < 27
+      ? "temp-cool"
+      : temperature < 30
+      ? "temp-warm"
+      : "temp-hot"
+  );
+
+  // Outdoor Humidity
+  elements.bars.outdoorHumidity.style.width = `${humidity}%`;
+  elements.outdoorHumidity.classList.remove(
+    "humidity-low",
+    "humidity-moderate",
+    "humidity-optimal",
+    "humidity-high",
+    "humidity-very-high"
+  );
+  elements.outdoorHumidity.classList.add(
+    humidity < 30
+      ? "humidity-low"
+      : humidity < 40
+      ? "humidity-moderate"
+      : humidity < 60
+      ? "humidity-optimal"
+      : humidity < 70
+      ? "humidity-high"
+      : "humidity-very-high"
+  );
+}
+
+function switchTab(tab) {
+  if (tab === 'indoor') {
+    elements.indoorTab.classList.add("active", "text-cyan-300", "border-cyan-400");
+    elements.indoorTab.classList.remove("text-gray-400");
+    elements.outdoorTab.classList.remove("active", "text-cyan-300", "border-cyan-400");
+    elements.outdoorTab.classList.add("text-gray-400");
+    elements.indoorContent.classList.remove("hidden");
+    elements.outdoorContent.classList.add("hidden");
+  } else {
+    elements.outdoorTab.classList.add("active", "text-cyan-300", "border-cyan-400");
+    elements.outdoorTab.classList.remove("text-gray-400");
+    elements.indoorTab.classList.remove("active", "text-cyan-300", "border-cyan-400");
+    elements.indoorTab.classList.add("text-gray-400");
+    elements.outdoorContent.classList.remove("hidden");
+    elements.indoorContent.classList.add("hidden");
+    fetchWeatherData();
+  }
+}
+
+async function fetchWeatherData() {
+  try {
+    const response = await fetch("/api/weather");
+    if (!response.ok) throw new Error("Failed to fetch weather data");
+    const data = await response.json();
+
+    // Update current weather
+    elements.outdoorTemp.textContent = `${data.current.temperature} °C`;
+    elements.outdoorHumidity.textContent = `${data.current.humidity} %`;
+    elements.weatherCondition.textContent = data.current.condition;
+    elements.windSpeed.textContent = `${data.current.windSpeed} km/h`;
+    elements.weatherUpdated.textContent = `Today at ${formatTime(new Date())}`;
+
+    // Update weather icon
+    const condition = data.current.condition.toLowerCase();
+    if (condition.includes("hujan")) {
+      elements.weatherIcon.className = "fas fa-cloud-rain text-4xl text-blue-400 mr-4";
+    } else if (condition.includes("cerah")) {
+      elements.weatherIcon.className = "fas fa-sun text-4xl text-yellow-400 mr-4";
+    } else if (condition.includes("berawan") || condition.includes("awan")) {
+      elements.weatherIcon.className = "fas fa-cloud text-4xl text-gray-400 mr-4";
+    } else if (condition.includes("petir")) {
+      elements.weatherIcon.className = "fas fa-bolt text-4xl text-purple-400 mr-4";
+    }
+
+    // Update forecast
+    elements.weatherForecast.innerHTML = data.forecast.map(item => `
+      <div class="glass-card rounded-lg p-4 text-center">
+        <div class="text-sm font-medium mb-1">${item.time}</div>
+        <i class="${item.icon} text-2xl mb-1 ${item.iconColor}"></i>
+        <div class="text-lg font-bold">${item.temperature}°C</div>
+        <div class="text-xs">${item.condition}</div>
+      </div>
+    `).join("");
+
+    updateOutdoorStyles({
+      temperature: data.current.temperature,
+      humidity: data.current.humidity
+    });
+
+    showToast("Weather data updated");
+  } catch (error) {
+    showToast("Failed to fetch weather data", true);
+    console.error(error);
+  }
+}
+
 async function fetchData() {
   try {
     const response = await fetch("/api/blynk");
@@ -146,9 +267,7 @@ async function fetchData() {
     elements.temperature.textContent = `${data.temperature.toFixed(1)} °C`;
     elements.humidity.textContent = `${data.humidity.toFixed(1)} %`;
     elements.gasRaw.textContent = data.rawGas.toFixed(0);
-    elements.gasCompensated.textContent = `${data.compensatedGas.toFixed(
-      1
-    )} ppm`;
+    elements.gasCompensated.textContent = `${data.compensatedGas.toFixed(1)} ppm`;
     elements.airQualityStatus.textContent = data.airQualityStatus;
 
     updateStyles(data);
@@ -172,4 +291,18 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(fetchData, 30000);
   setInterval(updateClock, 1000);
   updateClock();
+
+  // Tab event listeners
+  elements.indoorTab.addEventListener("click", () => switchTab('indoor'));
+  elements.outdoorTab.addEventListener("click", () => switchTab('outdoor'));
+
+  // Refresh button
+  elements.refreshButton.addEventListener("click", () => {
+    const activeTab = elements.indoorContent.classList.contains("hidden") ? 'outdoor' : 'indoor';
+    if (activeTab === 'indoor') {
+      fetchData();
+    } else {
+      fetchWeatherData();
+    }
+  });
 });
