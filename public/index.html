@@ -10,14 +10,15 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
   </head>
   <body class="min-h-screen overflow-x-hidden">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
 
-    <div class="container mx-auto px-4 pt-24">
+    <div class="container mx-auto px-4 pt-16">
       <h1
-        class="text-4xl md:text-2xl font-bold text-center font-orbitron tracking-wider mb-8 text-cyan-400"
+        class="text-4xl md:text-5xl font-bold text-center font-orbitron tracking-wider mb-8 text-cyan-400"
       >
         ROOM MONITORING
       </h1>
@@ -202,6 +203,24 @@
               <div>
                 <div class="font-medium">Wind Speed</div>
                 <div id="wind-speed" class="text-gray-300">-- km/h</div>
+              </div>
+              <div>
+                <div class="font-medium">Wind Direction</div>
+                <div id="wind-direction" class="text-gray-300">--</div>
+              </div>
+              <div>
+                <div class="font-medium">Wind Direction (Deg)</div>
+                <div id="wind-direction-deg" class="text-gray-300">--°</div>
+              </div>
+              <div>
+                <div class="font-medium">Visibility</div>
+                <div id="visibility" class="text-gray-300">-- km</div>
+              </div>
+              <div>
+                <div class="font-medium">Humidity</div>
+                <div id="outdoor-humidity-display" class="text-gray-300">
+                  -- %
+                </div>
               </div>
               <div>
                 <div class="font-medium">Cloud Cover</div>

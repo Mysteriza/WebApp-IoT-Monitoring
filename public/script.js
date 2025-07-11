@@ -24,10 +24,13 @@ const elements = {
   indoorContent: document.getElementById("indoor-content"),
   outdoorContent: document.getElementById("outdoor-content"),
   outdoorTemp: document.getElementById("outdoor-temp"),
-  outdoorHumidity: document.getElementById("outdoor-humidity"),
+  outdoorHumidity: document.getElementById("outdoor-humidity-display"),
   weatherIcon: document.getElementById("weather-icon"),
   weatherCondition: document.getElementById("weather-condition"),
   windSpeed: document.getElementById("wind-speed"),
+  windDirection: document.getElementById("wind-direction"),
+  windDirectionDeg: document.getElementById("wind-direction-deg"),
+  visibility: document.getElementById("visibility"),
   cloudCover: document.getElementById("cloud-cover"),
   precipitation: document.getElementById("precipitation"),
   weatherUpdated: document.getElementById("weather-updated"),
@@ -215,6 +218,9 @@ async function fetchWeatherData() {
     elements.outdoorHumidity.textContent = `${data.current.humidity} %`;
     elements.weatherCondition.textContent = data.current.condition;
     elements.windSpeed.textContent = `${data.current.windSpeed} km/h`;
+    elements.windDirection.textContent = data.current.windDirection;
+    elements.windDirectionDeg.textContent = `${data.current.windDirectionDeg}°`;
+    elements.visibility.textContent = `${(data.current.visibility / 1000).toFixed(1)} km`;
     elements.cloudCover.textContent = `${data.current.cloudCover} %`;
     elements.precipitation.textContent = `${data.current.precipitation} mm`;
     elements.weatherUpdated.textContent = data.current.lastUpdate;

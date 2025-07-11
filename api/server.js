@@ -92,6 +92,9 @@ app.get("/api/weather", async (req, res) => {
         humidity: currentWeather.hu,
         condition: currentWeather.weather_desc,
         windSpeed: currentWeather.ws,
+        windDirection: currentWeather.wd,
+        windDirectionDeg: currentWeather.wd_deg,
+        visibility: currentWeather.vs,
         cloudCover: currentWeather.tcc,
         precipitation: currentWeather.tp,
         lastUpdate: new Date(currentWeather.local_datetime).toLocaleString("en-US", {
