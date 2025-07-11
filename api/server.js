@@ -64,23 +64,15 @@ app.get("/api/weather", async (req, res) => {
     const currentWeather = data.data[0].cuaca[0][0];
     const forecastData = data.data[0].cuaca;
 
-    const forecastsByDate = {};
-    forecastData.forEach(day => {
-      const dateTime = new Date(day[0].local_datetime).toLocaleString("en-US", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-      if (!forecastsByDate[dateTime]) {
-        forecastsByDate[dateTime] = day.slice(0, 2);
-      }
-    });
-
-    const forecast = Object.keys(forecastsByDate).slice(0, 6).flatMap(dateTime =>
-      forecastsByDate[dateTime].map(item => ({
-        dateTime,
+    const forecast = forecastData.flatMap(day =>
+      day.map(item => ({
+        dateTime: new Date(item.local_datetime).toLocaleString("en-US", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }),
         temperature: item.t,
         condition: item.weather_desc,
         icon: item.image

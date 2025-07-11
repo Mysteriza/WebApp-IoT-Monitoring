@@ -205,7 +205,7 @@ function switchTab(tab) {
     elements.indoorTab.classList.add("text-gray-400");
     elements.outdoorContent.classList.remove("hidden");
     elements.indoorContent.classList.add("hidden");
-    if (!elements.weatherUpdated.textContent || elements.weatherUpdated.textContent === "--") {
+    if (elements.weatherUpdated.textContent === "--" || !elements.weatherUpdated.textContent) {
       fetchWeatherData();
     }
   }
