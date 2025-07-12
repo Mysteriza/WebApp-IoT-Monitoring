@@ -20,7 +20,10 @@ A simple real-time web-based monitoring system for temperature, humidity, and ga
 ---
 
 ## Screenshots
-<img src="https://github.com/user-attachments/assets/55aff42b-0946-42b4-a7d8-eb14e87b2a76" />
+<img width="1900" height="927" alt="image" src="https://github.com/user-attachments/assets/6e48b230-e2fe-4ed5-889b-c4b91f237116" />
+<img width="1896" height="918" alt="image" src="https://github.com/user-attachments/assets/33b7e9d1-6520-4ed3-b491-fe3a908d5f8e" />
+
+
 
 ---
 
