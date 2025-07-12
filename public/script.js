@@ -39,11 +39,10 @@ const elements = {
 
 function showToast(message, isError = false) {
   elements.toastText.textContent = message;
-  elements.toast.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 max-w-xs text-center transition-all duration-300 ${
-    isError
+  elements.toast.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 max-w-xs text-center transition-all duration-300 ${isError
       ? "bg-red-900 text-white border border-red-400"
       : "bg-gray-900 text-white border border-cyan-400"
-  }`;
+    }`;
   elements.toast.classList.remove("hidden");
   setTimeout(() => elements.toast.classList.add("hidden"), 3000);
 }
@@ -86,10 +85,10 @@ function updateStyles({
     temperature < 20
       ? "temp-cold"
       : temperature < 27
-      ? "temp-cool"
-      : temperature < 30
-      ? "temp-warm"
-      : "temp-hot"
+        ? "temp-cool"
+        : temperature < 30
+          ? "temp-warm"
+          : "temp-hot"
   );
 
   elements.humidity.classList.remove(
@@ -104,12 +103,12 @@ function updateStyles({
     humidity < 30
       ? "humidity-low"
       : humidity < 40
-      ? "humidity-moderate"
-      : humidity < 60
-      ? "humidity-optimal"
-      : humidity < 70
-      ? "humidity-high"
-      : "humidity-very-high"
+        ? "humidity-moderate"
+        : humidity < 60
+          ? "humidity-optimal"
+          : humidity < 70
+            ? "humidity-high"
+            : "humidity-very-high"
   );
 
   const rawPercent = Math.min(Math.max((rawGas / 1023) * 100, 0), 100);
@@ -162,10 +161,10 @@ function updateOutdoorStyles({ temperature, humidity }) {
     temperature < 20
       ? "temp-cold"
       : temperature < 27
-      ? "temp-cool"
-      : temperature < 30
-      ? "temp-warm"
-      : "temp-hot"
+        ? "temp-cool"
+        : temperature < 30
+          ? "temp-warm"
+          : "temp-hot"
   );
 
   elements.bars.outdoorHumidity.style.width = `${humidity}%`;
@@ -180,12 +179,12 @@ function updateOutdoorStyles({ temperature, humidity }) {
     humidity < 30
       ? "humidity-low"
       : humidity < 40
-      ? "humidity-moderate"
-      : humidity < 60
-      ? "humidity-optimal"
-      : humidity < 70
-      ? "humidity-high"
-      : "humidity-very-high"
+        ? "humidity-moderate"
+        : humidity < 60
+          ? "humidity-optimal"
+          : humidity < 70
+            ? "humidity-high"
+            : "humidity-very-high"
   );
 }
 
@@ -204,9 +203,7 @@ function switchTab(tab) {
     elements.indoorTab.classList.add("text-gray-400");
     elements.outdoorContent.classList.remove("hidden");
     elements.indoorContent.classList.add("hidden");
-    if (elements.weatherUpdated.textContent === "--" || !elements.weatherUpdated.textContent) {
-      fetchWeatherData();
-    }
+    fetchWeatherData(); // Panggil fetchWeatherData saat tab Outdoor diaktifkan
   }
 }
 
