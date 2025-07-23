@@ -229,11 +229,8 @@ function updateForecastUI(forecastData) {
     elements.forecastContainer.innerHTML = ''; // Clear previous forecast
     const now = new Date();
 
-    // Flatten the forecast arrays and filter for future times
     const allForecasts = forecastData.flat();
     const futureForecasts = allForecasts.filter(item => new Date(item.local_datetime) > now);
-
-    // Take the next 5 forecasts
     const displayForecasts = futureForecasts.slice(0, 5);
 
     if (displayForecasts.length === 0) {
@@ -247,14 +244,16 @@ function updateForecastUI(forecastData) {
         
         const forecastCard = `
             <div class="forecast-card flex flex-col items-center">
-                <p class="font-bold text-base mb-2">${timeString}</p>
-                <img src="${item.image}" alt="${item.weather_desc}" class="w-14 h-14">
-                <p class="font-bold text-lg mt-2">${item.t}°C</p>
+                <p class="font-bold text-base mb-1">${timeString}</p>
+                <img src="${item.image}" alt="${item.weather_desc}" class="w-12 h-12">
+                <p class="text-sm text-gray-300 mt-1">${item.weather_desc}</p>
+                <p class="font-bold text-lg mt-1">${item.t}°C</p>
             </div>
         `;
         elements.forecastContainer.innerHTML += forecastCard;
     });
 }
+
 
 function resetIndoorUI() {
   elements.temperature.textContent = "-- °C";
