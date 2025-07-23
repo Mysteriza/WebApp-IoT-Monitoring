@@ -2,9 +2,9 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/Mysteriza/WebApp-IoT-Monitoring)
 
-A simple real-time web-based monitoring system for temperature, humidity, and gas levels, collected from an ESP8266 with a DHT22 and MQ-135 sensor, integrated with Blynk. This dashboard provides a futuristic UI with a glass effect for monitoring room conditions, now enhanced with outdoor weather data from BMKG API.
+A simple real-time web-based monitoring system for temperature, humidity, and gas levels, collected from an ESP8266 with a BME680 and MQ-135 sensor, integrated with Blynk. This dashboard provides a futuristic UI with a glass effect for monitoring room conditions, now enhanced with outdoor weather data from BMKG API.
 
-## [Arduino Code | ESP8266 + DHT22 + Blynk](https://github.com/Mysteriza/DHT22-Blynk-Monitoring)
+## [Arduino Code | ESP8266 + BME680 + Blynk](https://github.com/Mysteriza/BME680-Blynk-Monitoring)
 
 ---
 
