@@ -2,28 +2,25 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/Mysteriza/WebApp-IoT-Monitoring)
 
-A simple real-time web-based monitoring system for temperature, humidity, and gas levels, collected from an ESP8266 with a BME680 and MQ-135 sensor, integrated with Blynk. This dashboard provides a futuristic UI with a glass effect for monitoring room conditions, now enhanced with outdoor weather data from BMKG API.
+A simple real-time web-based monitoring system for temperature, humidity, and gas levels, collected from an ESP8266 with a BME280 and MQ-135 sensor, integrated with Blynk. This dashboard provides a futuristic UI with a glass effect for monitoring room conditions.
 
-## [Arduino Code | ESP8266 + BME680 + Blynk](https://github.com/Mysteriza/BME680-Blynk-Monitoring)
+## [Arduino Code | ESP8266 + BME280 + MQ-135 + Blynk](https://github.com/Mysteriza/BME280-MQ135-Blynk-Monitoring)
 
 ---
 
 ## Features
-- **Real-Time Monitoring 📡**: Displays indoor temperature, humidity, raw gas, compensated gas, and air quality status in real-time, along with outdoor temperature, humidity, and weather conditions.
+- **Real-Time Monitoring 📡**: Displays indoor temperature, humidity, raw gas, compensated gas, and air quality status in real-time.
 - **Dynamic Colors 🎨**: Colors change based on temperature, humidity, and air quality levels for easy interpretation.
 - **Responsive Design 📱**: Works seamlessly on desktop, tablet, and mobile devices.
-- **Last Updated Timestamp ⏱**: Shows the exact last refresh time (including seconds) for both indoor and outdoor data.
-- **Manual Refresh Button 🔄**: Instantly fetch new data with a single click for indoor and outdoor sections.
-- **Tabbed Interface with Icons 🌞🏠**: Switch between Indoor and Outdoor tabs with intuitive icons for a better user experience.
+- **Last Updated Timestamp ⏱**: Shows the exact last refresh time (including seconds).
+- **Manual Refresh Button 🔄**: Instantly fetch new data with a single click for indoor sections.
 - **Smooth UI Animations ✨**: Uses CSS transitions for a better user experience.
 - **Glass Effect UI 🪞**: Futuristic glass cards with blur effects for a modern look.
-- **Optimized API Usage ⚡**: Weather data updates are throttled to prevent excessive API calls, respecting BMKG's 60 requests per hour limit.
 
 ---
 
 ## Screenshots
-<img width="1900" height="927" alt="image" src="https://github.com/user-attachments/assets/6e48b230-e2fe-4ed5-889b-c4b91f237116" />
-<img width="1896" height="918" alt="image" src="https://github.com/user-attachments/assets/33b7e9d1-6520-4ed3-b491-fe3a908d5f8e" />
+<img width="1899" height="804" alt="image" src="https://github.com/user-attachments/assets/ea5ea190-499f-4172-8bea-a35e0ea80c27" />
 
 ---
 
@@ -36,7 +33,6 @@ Follow these steps to set up the IoT Monitoring dashboard on your local machine 
 - **Git**: [Download Git](https://git-scm.com/downloads)
 - **Vercel Account** (for deployment): [Sign up for Vercel](https://vercel.com/signup)
 - **Blynk Account**: Set up your Blynk project and get the `BLYNK_AUTH_TOKEN`.
-- **Internet Connection**: Required for fetching weather data from BMKG API.
 
 ### Steps
 1. **Clone the Repository**  
