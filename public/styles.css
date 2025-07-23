@@ -90,20 +90,7 @@ body {
   height: 10px;
   border-radius: 50%;
   display: inline-block;
-  margin-right: 6px;
   animation: pulse 2.5s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 1;
-  }
 }
 
 .btn-neon {
@@ -201,10 +188,15 @@ body {
   outline: none;
   display: flex;
   align-items: center;
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.1rem;
+  padding: 8px 16px;
+  border-bottom: 2px solid transparent;
 }
 
 .tab-button.active {
   color: var(--primary);
+  border-bottom-color: var(--primary);
 }
 
 .tab-button:not(.active) {
@@ -221,33 +213,46 @@ body {
   transition: opacity 0.3s ease;
 }
 
+.outdoor-card {
+  border-radius: 0.75rem; /* 12px */
+  padding: 1.5rem; /* 24px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.forecast-container::-webkit-scrollbar {
+  height: 6px;
+}
+.forecast-container::-webkit-scrollbar-track {
+  background: rgba(10, 10, 30, 0.5);
+  border-radius: 10px;
+}
+.forecast-container::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+}
+.forecast-container::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+.forecast-card {
+  min-width: 100px;
+  text-align: center;
+  background: rgba(20, 20, 40, 0.7);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Pressure and Altitude specific styles */
 .pressure-normal {
   color: #00ff9d;
 }
 .pressure-low {
   color: #ffcc00;
-}
-.pressure-high {
-  color: #ff6600;
-}
-
-.altitude-low {
-  color: #00ff9d;
-}
-.altitude-medium {
-  color: #ffcc00;
-}
-.altitude-high {
-  color: #ff6600;
-}
-
-/* Pressure and Altitude specific styles */
-.pressure-low {
-  color: #ffcc00;
-}
-.pressure-normal {
-  color: #00ff9d;
 }
 .pressure-high {
   color: #ff6600;
@@ -283,7 +288,7 @@ body {
     display: none;
   }
   .data-value {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
   .container {
     padding-bottom: 0.5rem;

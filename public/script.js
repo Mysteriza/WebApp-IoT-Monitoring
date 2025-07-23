@@ -32,6 +32,8 @@ const elements = {
   outdoorHumidity: document.getElementById("outdoor-humidity"),
   windSpeed: document.getElementById("wind-speed"),
   windDirection: document.getElementById("wind-direction"),
+  visibility: document.getElementById("visibility"),
+  forecastContainer: document.getElementById("forecast-container"),
   
   // Common elements
   lastUpdated: document.getElementById("last-updated"),
@@ -42,9 +44,9 @@ const elements = {
   toastText: document.getElementById("message-text"),
 };
 
-let activeTab = 'indoor'; // 'indoor' or 'outdoor'
+let activeTab = 'indoor';
 let indoorDataInterval;
-let outdoorDataInterval;
+let isOutdoorDataLoaded = false;
 
 // Utility functions
 function formatNumber(value, decimals = 2) {
@@ -100,8 +102,9 @@ function updateIndoorStyles(data) {
     data.humidity < 70 ? "humidity-high" : "humidity-very-high"
   );
 
-  // Pressure (Fixed calculation)
-  const pressurePercent = Math.min(Math.max(((data.pressure - 980) / 40) * 100, 0), 100);
+  // Pressure (Fixed calculation with new range)
+  const pressureRange = 1100 - 500;
+  const pressurePercent = Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100);
   elements.bars.pressure.style.width = `${pressurePercent}%`;
   elements.pressure.className = "data-value text-4xl font-bold " + (
     data.pressure < 980 ? "pressure-low" :
@@ -133,13 +136,12 @@ function updateIndoorStyles(data) {
     "Very Poor": ["status-critical", "text-red-400"]
   };
   
-  elements.statusIndicators.forEach(indicator => {
-    indicator.className = "status-indicator " + 
-      (statusClasses[data.airQualityStatus]?.[0] || "status-good");
+  const allStatusIndicators = document.querySelectorAll("#indoor-content .status-indicator");
+  allStatusIndicators.forEach(indicator => {
+    indicator.className = "status-indicator ml-3 " + (statusClasses[data.airQualityStatus]?.[0] || "status-good");
   });
   
-  elements.airQualityStatus.className = "text-2xl font-bold " + 
-    (statusClasses[data.airQualityStatus]?.[1] || "text-cyan-300");
+  elements.airQualityStatus.className = "text-2xl font-bold mt-2 " + (statusClasses[data.airQualityStatus]?.[1] || "text-cyan-300");
 }
 
 async function fetchIndoorData() {
@@ -153,10 +155,9 @@ async function fetchIndoorData() {
     
     const data = await response.json();
     
-    // Update UI with formatted values
     elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
     elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
-    elements.pressure.textContent = `${formatNumber(data.pressure)} hPa`;
+    elements.pressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
     elements.altitude.textContent = `${formatNumber(data.altitude)} m`;
     elements.gasRaw.textContent = formatNumber(data.rawGas, 0);
     elements.gasCompensated.textContent = `${formatNumber(data.compensatedGas, 1)} ppm`;
@@ -175,7 +176,12 @@ async function fetchIndoorData() {
   }
 }
 
-async function fetchOutdoorData() {
+async function fetchOutdoorData(forceRefresh = false) {
+    if (isOutdoorDataLoaded && !forceRefresh) {
+        showToast("Outdoor data already loaded.");
+        return;
+    }
+
     try {
         const startTime = performance.now();
         const response = await fetch('/api/bmkg');
@@ -184,6 +190,7 @@ async function fetchOutdoorData() {
         }
         const bmkgData = await response.json();
 
+        // Update current weather
         const location = bmkgData.lokasi;
         const weatherNow = bmkgData.data[0].cuaca[0][0];
 
@@ -196,11 +203,18 @@ async function fetchOutdoorData() {
 
         elements.outdoorTemperature.textContent = `${formatNumber(weatherNow.t, 1)} °C`;
         elements.outdoorHumidity.textContent = `${formatNumber(weatherNow.hu, 1)} %`;
-        elements.windSpeed.textContent = `${formatNumber(weatherNow.ws, 1)} m/s`;
-        elements.windDirection.textContent = `Direction: ${weatherNow.wd}`;
         
-        elements.lastUpdated.textContent = `Last Updated: ${formatTime(new Date())}`;
+        const windSpeedKmh = formatNumber(weatherNow.ws * 3.6, 1); // Convert m/s to km/h
+        elements.windSpeed.textContent = windSpeedKmh;
+        elements.windDirection.textContent = `From ${weatherNow.wd}`;
+        
+        elements.visibility.textContent = formatNumber(weatherNow.vs / 1000, 1);
 
+        // Update forecast
+        updateForecastUI(bmkgData.data[0].cuaca);
+
+        elements.lastUpdated.textContent = `Last Updated: ${formatTime(new Date())}`;
+        isOutdoorDataLoaded = true;
         const loadTime = (performance.now() - startTime).toFixed(1);
         showToast(`Outdoor data loaded in ${loadTime}ms`);
 
@@ -211,6 +225,36 @@ async function fetchOutdoorData() {
     }
 }
 
+function updateForecastUI(forecastData) {
+    elements.forecastContainer.innerHTML = ''; // Clear previous forecast
+    const now = new Date();
+
+    // Flatten the forecast arrays and filter for future times
+    const allForecasts = forecastData.flat();
+    const futureForecasts = allForecasts.filter(item => new Date(item.local_datetime) > now);
+
+    // Take the next 5 forecasts
+    const displayForecasts = futureForecasts.slice(0, 5);
+
+    if (displayForecasts.length === 0) {
+        elements.forecastContainer.innerHTML = `<p class="text-gray-400">No future forecast data available.</p>`;
+        return;
+    }
+    
+    displayForecasts.forEach(item => {
+        const forecastDate = new Date(item.local_datetime);
+        const timeString = forecastDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        const forecastCard = `
+            <div class="forecast-card flex flex-col items-center">
+                <p class="font-bold text-base mb-2">${timeString}</p>
+                <img src="${item.image}" alt="${item.weather_desc}" class="w-14 h-14">
+                <p class="font-bold text-lg mt-2">${item.t}°C</p>
+            </div>
+        `;
+        elements.forecastContainer.innerHTML += forecastCard;
+    });
+}
 
 function resetIndoorUI() {
   elements.temperature.textContent = "-- °C";
@@ -233,16 +277,15 @@ function resetOutdoorUI() {
     elements.weatherIcon.style.display = 'none';
     elements.outdoorTemperature.textContent = "-- °C";
     elements.outdoorHumidity.textContent = "-- %";
-    elements.windSpeed.textContent = "-- m/s";
-    elements.windDirection.textContent = "Direction: --";
+    elements.windSpeed.textContent = "--";
+    elements.windDirection.textContent = "km/h";
+    elements.visibility.textContent = "--";
+    elements.forecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Failed to load forecast.</p>`;
 }
 
 function switchTab(tab) {
     activeTab = tab;
-
-    // Stop intervals
     clearInterval(indoorDataInterval);
-    clearInterval(outdoorDataInterval);
 
     if (tab === 'indoor') {
         elements.indoorTabButton.classList.add('active');
@@ -250,35 +293,30 @@ function switchTab(tab) {
         elements.indoorContent.classList.remove('hidden');
         elements.outdoorContent.classList.add('hidden');
         fetchIndoorData();
-        indoorDataInterval = setInterval(fetchIndoorData, 30000); // 30 seconds for indoor
+        indoorDataInterval = setInterval(fetchIndoorData, 30000);
     } else {
         elements.outdoorTabButton.classList.add('active');
         elements.indoorTabButton.classList.remove('active');
         elements.outdoorContent.classList.remove('hidden');
         elements.indoorContent.classList.add('hidden');
-        fetchOutdoorData();
-        outdoorDataInterval = setInterval(fetchOutdoorData, 600000); // 10 minutes for outdoor
+        fetchOutdoorData(); // Will use cached data if available
     }
 }
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
-  // Setup tab listeners
   elements.indoorTabButton.addEventListener('click', () => switchTab('indoor'));
   elements.outdoorTabButton.addEventListener('click', () => switchTab('outdoor'));
 
-  // Initial load
   switchTab('indoor'); 
   
-  // Update clock every second
   setInterval(updateClock, 1000);
   updateClock();
   
-  // Manual refresh button
   elements.refreshButton.addEventListener("click", () => {
     elements.refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> Refreshing...';
     
-    const fetchPromise = activeTab === 'indoor' ? fetchIndoorData() : fetchOutdoorData();
+    const fetchPromise = activeTab === 'indoor' ? fetchIndoorData() : fetchOutdoorData(true);
 
     fetchPromise.finally(() => {
       setTimeout(() => {
