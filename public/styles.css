@@ -221,6 +221,62 @@ body {
   transition: opacity 0.3s ease;
 }
 
+/* Pressure and Altitude specific styles */
+.pressure-normal {
+  color: #00ff9d;
+}
+.pressure-low {
+  color: #ffcc00;
+}
+.pressure-high {
+  color: #ff6600;
+}
+
+.altitude-low {
+  color: #00ff9d;
+}
+.altitude-medium {
+  color: #ffcc00;
+}
+.altitude-high {
+  color: #ff6600;
+}
+
+/* Pressure and Altitude specific styles */
+.pressure-low {
+  color: #ffcc00;
+}
+.pressure-normal {
+  color: #00ff9d;
+}
+.pressure-high {
+  color: #ff6600;
+}
+
+.altitude-low {
+  color: #00ff9d;
+}
+.altitude-medium {
+  color: #ffcc00;
+}
+.altitude-high {
+  color: #ff6600;
+}
+
+/* Loading animation */
+.fa-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 768px) {
   .orb-1,
   .orb-2 {

@@ -1,8 +1,8 @@
-let lastWeatherFetch = 0;
-
 const elements = {
   temperature: document.getElementById("temperature"),
   humidity: document.getElementById("humidity"),
+  pressure: document.getElementById("pressure"),
+  altitude: document.getElementById("altitude"),
   gasRaw: document.getElementById("gas-raw"),
   gasCompensated: document.getElementById("gas-compensated"),
   airQualityStatus: document.getElementById("air-quality-status"),
@@ -15,36 +15,24 @@ const elements = {
   bars: {
     temp: document.getElementById("temp-bar"),
     humidity: document.getElementById("humidity-bar"),
+    pressure: document.getElementById("pressure-bar"),
+    altitude: document.getElementById("altitude-bar"),
     gasRaw: document.getElementById("gas-raw-bar"),
-    gasCompensated: document.getElementById("gas-compensated-bar"),
-    outdoorTemp: document.getElementById("outdoor-temp-bar"),
-    outdoorHumidity: document.getElementById("outdoor-humidity-bar")
+    gasCompensated: document.getElementById("gas-compensated-bar")
   },
-  statusIndicators: document.querySelectorAll(".status-indicator"),
-  indoorTab: document.getElementById("indoor-tab"),
-  outdoorTab: document.getElementById("outdoor-tab"),
-  indoorContent: document.getElementById("indoor-content"),
-  outdoorContent: document.getElementById("outdoor-content"),
-  outdoorTemp: document.getElementById("outdoor-temp"),
-  outdoorHumidity: document.getElementById("outdoor-humidity"),
-  weatherIcon: document.getElementById("weather-icon"),
-  weatherCondition: document.getElementById("weather-condition"),
-  windSpeed: document.getElementById("wind-speed"),
-  windDirection: document.getElementById("wind-direction"),
-  windDirectionDeg: document.getElementById("wind-direction-deg"),
-  visibility: document.getElementById("visibility"),
-  cloudCover: document.getElementById("cloud-cover"),
-  precipitation: document.getElementById("precipitation"),
-  weatherUpdated: document.getElementById("weather-updated"),
-  weatherRefreshButton: document.getElementById("weather-refresh-button")
+  statusIndicators: document.querySelectorAll(".status-indicator")
 };
+
+// Utility functions
+function formatNumber(value, decimals = 2) {
+  return value === null || isNaN(value) ? '--' : value.toFixed(decimals);
+}
 
 function showToast(message, isError = false) {
   elements.toastText.textContent = message;
   elements.toast.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 max-w-xs text-center transition-all duration-300 ${
-    isError
-      ? "bg-red-900 text-white border border-red-400"
-      : "bg-gray-900 text-white border border-cyan-400"
+    isError ? "bg-red-900 text-white border border-red-400" 
+            : "bg-gray-900 text-white border border-cyan-400"
   }`;
   elements.toast.classList.remove("hidden");
   setTimeout(() => elements.toast.classList.add("hidden"), 3000);
@@ -55,7 +43,7 @@ function formatTime(date) {
     hour12: false,
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
+    second: "2-digit"
   });
 }
 
@@ -65,252 +53,138 @@ function updateClock() {
   elements.date.textContent = now.toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   });
 }
 
-function updateStyles({
-  temperature,
-  humidity,
-  rawGas,
-  compensatedGas,
-  airQualityStatus,
-}) {
-  elements.temperature.classList.remove(
-    "temp-cold",
-    "temp-cool",
-    "temp-warm",
-    "temp-hot"
-  );
-  const tempPercent = Math.min(Math.max((temperature / 40) * 100, 0), 100);
+function updateStyles(data) {
+  // Temperature
+  const tempPercent = Math.min(Math.max((data.temperature / 40) * 100, 0), 100);
   elements.bars.temp.style.width = `${tempPercent}%`;
-  elements.temperature.classList.add(
-    temperature < 20
-      ? "temp-cold"
-      : temperature < 27
-      ? "temp-cool"
-      : temperature < 30
-      ? "temp-warm"
-      : "temp-hot"
+  elements.temperature.className = "data-value text-4xl font-bold " + (
+    data.temperature < 20 ? "temp-cold" :
+    data.temperature < 27 ? "temp-cool" :
+    data.temperature < 30 ? "temp-warm" : "temp-hot"
   );
 
-  elements.humidity.classList.remove(
-    "humidity-low",
-    "humidity-moderate",
-    "humidity-optimal",
-    "humidity-high",
-    "humidity-very-high"
-  );
-  elements.bars.humidity.style.width = `${humidity}%`;
-  elements.humidity.classList.add(
-    humidity < 30
-      ? "humidity-low"
-      : humidity < 40
-      ? "humidity-moderate"
-      : humidity < 60
-      ? "humidity-optimal"
-      : humidity < 70
-      ? "humidity-high"
-      : "humidity-very-high"
+  // Humidity
+  const humidityPercent = Math.min(Math.max(data.humidity, 0), 100);
+  elements.bars.humidity.style.width = `${humidityPercent}%`;
+  elements.humidity.className = "data-value text-4xl font-bold " + (
+    data.humidity < 30 ? "humidity-low" :
+    data.humidity < 40 ? "humidity-moderate" :
+    data.humidity < 60 ? "humidity-optimal" :
+    data.humidity < 70 ? "humidity-high" : "humidity-very-high"
   );
 
-  const rawPercent = Math.min(Math.max((rawGas / 1023) * 100, 0), 100);
+  // Pressure
+  const pressurePercent = Math.min(Math.max((data.pressure - 950) / 100 * 100, 0), 100);
+  elements.bars.pressure.style.width = `${pressurePercent}%`;
+  elements.pressure.className = "data-value text-4xl font-bold " + (
+    data.pressure < 980 ? "pressure-low" :
+    data.pressure > 1020 ? "pressure-high" : "pressure-normal"
+  );
+
+  // Altitude
+  const altitudePercent = Math.min(Math.max(data.altitude / 2000 * 100, 0), 100);
+  elements.bars.altitude.style.width = `${altitudePercent}%`;
+  elements.altitude.className = "data-value text-4xl font-bold " + (
+    data.altitude < 100 ? "altitude-low" :
+    data.altitude > 500 ? "altitude-high" : "altitude-medium"
+  );
+
+  // Gas Raw
+  const rawPercent = Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100);
   elements.bars.gasRaw.style.width = `${rawPercent}%`;
 
-  const compPercent = Math.min(Math.max((compensatedGas / 1000) * 100, 0), 100);
+  // Gas Compensated
+  const compPercent = Math.min(Math.max((data.compensatedGas / 1000) * 100, 0), 100);
   elements.bars.gasCompensated.style.width = `${compPercent}%`;
 
+  // Air Quality
   const statusClasses = {
     "Very Good": ["status-excellent", "text-green-400"],
     Good: ["status-good", "text-cyan-300"],
     Fair: ["status-fair", "text-yellow-400"],
     Poor: ["status-poor", "text-orange-400"],
-    "Very Poor": ["status-critical", "text-red-400"],
+    "Very Poor": ["status-critical", "text-red-400"]
   };
-  elements.statusIndicators.forEach((indicator) => {
-    indicator.classList.remove(
-      "status-excellent",
-      "status-good",
-      "status-fair",
-      "status-poor",
-      "status-critical"
-    );
-    indicator.classList.add(
-      statusClasses[airQualityStatus]?.[0] || "status-good"
-    );
+  
+  elements.statusIndicators.forEach(indicator => {
+    indicator.className = "status-indicator " + 
+      (statusClasses[data.airQualityStatus]?.[0] || "status-good");
   });
-  elements.airQualityStatus.classList.remove(
-    "text-cyan-300",
-    "text-green-400",
-    "text-yellow-400",
-    "text-orange-400",
-    "text-red-400"
-  );
-  elements.airQualityStatus.classList.add(
-    statusClasses[airQualityStatus]?.[1] || "text-cyan-300"
-  );
-}
-
-function updateOutdoorStyles({ temperature, humidity }) {
-  const outdoorTempPercent = Math.min(Math.max(((temperature - 10) / 30) * 100, 0), 100);
-  elements.bars.outdoorTemp.style.width = `${outdoorTempPercent}%`;
-  elements.outdoorTemp.classList.remove(
-    "temp-cold",
-    "temp-cool",
-    "temp-warm",
-    "temp-hot"
-  );
-  elements.outdoorTemp.classList.add(
-    temperature < 20
-      ? "temp-cold"
-      : temperature < 27
-      ? "temp-cool"
-      : temperature < 30
-      ? "temp-warm"
-      : "temp-hot"
-  );
-
-  elements.bars.outdoorHumidity.style.width = `${humidity}%`;
-  elements.outdoorHumidity.classList.remove(
-    "humidity-low",
-    "humidity-moderate",
-    "humidity-optimal",
-    "humidity-high",
-    "humidity-very-high"
-  );
-  elements.outdoorHumidity.classList.add(
-    humidity < 30
-      ? "humidity-low"
-      : humidity < 40
-      ? "humidity-moderate"
-      : humidity < 60
-      ? "humidity-optimal"
-      : humidity < 70
-      ? "humidity-high"
-      : "humidity-very-high"
-  );
-}
-
-function switchTab(tab) {
-  if (tab === 'indoor') {
-    elements.indoorTab.classList.add("active", "text-cyan-300", "border-cyan-400");
-    elements.indoorTab.classList.remove("text-gray-400");
-    elements.outdoorTab.classList.remove("active", "text-cyan-300", "border-cyan-400");
-    elements.outdoorTab.classList.add("text-gray-400");
-    elements.indoorContent.classList.remove("hidden");
-    elements.outdoorContent.classList.add("hidden");
-  } else {
-    elements.outdoorTab.classList.add("active", "text-cyan-300", "border-cyan-400");
-    elements.outdoorTab.classList.remove("text-gray-400");
-    elements.indoorTab.classList.remove("active", "text-cyan-300", "border-cyan-400");
-    elements.indoorTab.classList.add("text-gray-400");
-    elements.outdoorContent.classList.remove("hidden");
-    elements.indoorContent.classList.add("hidden");
-    const now = Date.now();
-    if (now - lastWeatherFetch > 300000) { // Batasi pembaruan setiap 5 menit (300000 ms)
-      fetchWeatherData();
-    }
-  }
-}
-
-function getWindDirectionFull(wd) {
-  const directions = {
-    'N': { en: 'North', id: 'Utara' },
-    'NE': { en: 'Northeast', id: 'Timur Laut' },
-    'E': { en: 'East', id: 'Timur' },
-    'SE': { en: 'Southeast', id: 'Tenggara' },
-    'S': { en: 'South', id: 'Selatan' },
-    'SW': { en: 'Southwest', id: 'Barat Daya' },
-    'W': { en: 'West', id: 'Barat' },
-    'NW': { en: 'Northwest', id: 'Barat Laut' }
-  };
-  return directions[wd] || { en: wd, id: wd };
-}
-
-async function fetchWeatherData() {
-  try {
-    const response = await fetch("/api/weather");
-    if (!response.ok) throw new Error("Failed to fetch weather data");
-    const data = await response.json();
-    const now = new Date();
-
-    elements.outdoorTemp.textContent = `${data.current.temperature} °C`;
-    elements.outdoorHumidity.textContent = `${data.current.humidity} %`;
-    elements.weatherCondition.textContent = data.current.condition;
-    elements.windSpeed.textContent = `${data.current.windSpeed} km/h`;
-    const windDir = getWindDirectionFull(data.current.windDirection);
-    elements.windDirection.textContent = `${windDir.id} (${windDir.en})`;
-    elements.windDirectionDeg.textContent = `${data.current.windDirectionDeg}°`;
-    elements.visibility.textContent = `${(data.current.visibility / 1000).toFixed(1)} km`;
-    elements.cloudCover.textContent = `${data.current.cloudCover} %`;
-    elements.precipitation.textContent = `${data.current.precipitation} mm`;
-    elements.weatherUpdated.textContent = `Last Updated: ${formatTime(now)}`;
-    elements.weatherIcon.src = data.current.icon;
-
-    updateOutdoorStyles({
-      temperature: data.current.temperature,
-      humidity: data.current.humidity
-    });
-
-    lastWeatherFetch = now; // Perbarui timestamp setelah fetch berhasil
-    showToast("Weather data updated");
-  } catch (error) {
-    showToast("Failed to fetch weather data", true);
-    console.error(error);
-  }
+  
+  elements.airQualityStatus.className = "text-2xl font-bold " + 
+    (statusClasses[data.airQualityStatus]?.[1] || "text-cyan-300");
 }
 
 async function fetchData() {
   try {
+    const startTime = performance.now();
     const response = await fetch("/api/blynk");
-    if (!response.ok)
-      throw new Error((await response.json()).error || "Failed to fetch data");
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
-
-    elements.temperature.textContent = `${data.temperature.toFixed(1)} °C`;
-    elements.humidity.textContent = `${data.humidity.toFixed(1)} %`;
-    elements.gasRaw.textContent = data.rawGas.toFixed(0);
-    elements.gasCompensated.textContent = `${data.compensatedGas.toFixed(1)} ppm`;
-    elements.airQualityStatus.textContent = data.airQualityStatus;
+    
+    // Update UI with formatted values
+    elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
+    elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
+    elements.pressure.textContent = `${formatNumber(data.pressure)} hPa`;
+    elements.altitude.textContent = `${formatNumber(data.altitude)} m`;
+    elements.gasRaw.textContent = formatNumber(data.rawGas, 0);
+    elements.gasCompensated.textContent = `${formatNumber(data.compensatedGas, 1)} ppm`;
+    elements.airQualityStatus.textContent = data.airQualityStatus || "--";
 
     updateStyles(data);
-    const now = new Date();
-    elements.lastUpdated.textContent = `Last Updated: ${formatTime(now)}`;
-    updateClock();
-    showToast("Data Updated Successfully!");
+    elements.lastUpdated.textContent = `Last Updated: ${formatTime(new Date())}`;
+    
+    const loadTime = (performance.now() - startTime).toFixed(1);
+    showToast(`Data loaded in ${loadTime}ms`);
+    
   } catch (error) {
-    elements.temperature.textContent = "-- °C";
-    elements.humidity.textContent = "-- %";
-    elements.gasRaw.textContent = "--";
-    elements.gasCompensated.textContent = "-- ppm";
-    elements.airQualityStatus.textContent = "--";
-    showToast(error.message || "Failed to fetch data. Retrying...", true);
+    console.error("Fetch error:", error);
+    showToast("Failed to update data. Retrying...", true);
+    resetUI();
   }
 }
 
+function resetUI() {
+  elements.temperature.textContent = "-- °C";
+  elements.humidity.textContent = "-- %";
+  elements.pressure.textContent = "-- hPa";
+  elements.altitude.textContent = "-- m";
+  elements.gasRaw.textContent = "--";
+  elements.gasCompensated.textContent = "-- ppm";
+  elements.airQualityStatus.textContent = "--";
+  
+  Object.values(elements.bars).forEach(bar => {
+    bar.style.width = "50%";
+  });
+}
+
+// Initialize
 document.addEventListener("DOMContentLoaded", () => {
+  // First load
   fetchData();
-  setInterval(fetchData, 30000);
+  
+  // Update clock every second
   setInterval(updateClock, 1000);
   updateClock();
-
-  elements.indoorTab.addEventListener("click", () => switchTab('indoor'));
-  elements.outdoorTab.addEventListener("click", () => switchTab('outdoor'));
-
+  
+  // Refresh data every 30 seconds
+  setInterval(fetchData, 30000);
+  
+  // Manual refresh button
   elements.refreshButton.addEventListener("click", () => {
-    fetchData();
+    elements.refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> Refreshing...';
+    fetchData().finally(() => {
+      setTimeout(() => {
+        elements.refreshButton.innerHTML = '<i class="fas fa-sync mr-2"></i> Refresh Data';
+      }, 1000);
+    });
   });
-
-  elements.weatherRefreshButton.addEventListener("click", () => {
-    fetchWeatherData();
-  });
-
-  setInterval(() => {
-    if (!elements.outdoorContent.classList.contains("hidden")) {
-      const now = Date.now();
-      if (now - lastWeatherFetch > 1200000) { // Pembaruan otomatis setiap 20 menit
-        fetchWeatherData();
-      }
-    }
-  }, 60000); // Cek setiap menit
 });
