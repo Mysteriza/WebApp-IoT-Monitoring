@@ -7,9 +7,12 @@ const BLYNK_SERVER = "blynk.cloud";
 const BLYNK_AUTH_TOKEN = process.env.BLYNK_AUTH_TOKEN;
 const PINS = ["V0", "V1", "V5", "V6", "V7", "V8", "V9"];
 
+const BMKG_API_URL = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=32.73.14.1002";
+
 app.use(express.static("public"));
 app.use(express.json());
 
+// Endpoint for fetching indoor sensor data from Blynk
 app.get("/api/blynk", async (req, res) => {
   try {
     if (!BLYNK_AUTH_TOKEN) {
@@ -71,6 +74,26 @@ app.get("/api/blynk", async (req, res) => {
     });
   }
 });
+
+// New endpoint for fetching outdoor weather data from BMKG
+app.get("/api/bmkg", async (req, res) => {
+  try {
+    const response = await fetch(BMKG_API_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("BMKG API Error:", error);
+    res.status(500).json({
+      error: error.message,
+      details: "Failed to fetch weather data from BMKG",
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 
 function parseSafeFloat(value, fallback = 0) {
   if (value === null || value === undefined) return fallback;
