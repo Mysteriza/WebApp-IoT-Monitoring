@@ -21,7 +21,6 @@ const elements = {
     gasRaw: document.getElementById("gas-raw-bar"),
     gasCompensated: document.getElementById("gas-compensated-bar")
   },
-  statusIndicators: document.querySelectorAll(".status-indicator"),
   
   // Outdoor elements
   locationName: document.getElementById("location-name"),
@@ -49,7 +48,7 @@ let indoorDataInterval;
 let isOutdoorDataLoaded = false;
 
 // --- UTILITY FUNCTIONS ---
-function formatNumber(value, decimals = 2) {
+function formatNumber(value, decimals = 0) {
   const num = parseFloat(value);
   return isNaN(num) ? '--' : num.toFixed(decimals);
 }
@@ -64,13 +63,9 @@ function showToast(message, isError = false) {
   setTimeout(() => elements.toast.classList.add("hidden"), 3000);
 }
 
-function formatTime(date) {
-  return date.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-}
-
 function updateClock() {
   const now = new Date();
-  elements.time.textContent = formatTime(now);
+  elements.time.textContent = now.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
   elements.date.textContent = now.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 }
 
@@ -83,21 +78,17 @@ function updateIndoorStyles(data) {
     return classes[classes.length - 1];
   };
 
-  const tempPercent = Math.min(Math.max((data.temperature / 40) * 100, 0), 100);
-  elements.bars.temp.style.width = `${tempPercent}%`;
+  elements.bars.temp.style.width = `${Math.min(Math.max((data.temperature / 40) * 100, 0), 100)}%`;
   elements.temperature.className = `data-value text-4xl font-bold ${getStyleClass(data.temperature, [20, 27, 30], ['temp-cold', 'temp-cool', 'temp-warm', 'temp-hot'])}`;
 
-  const humidityPercent = Math.min(Math.max(data.humidity, 0), 100);
-  elements.bars.humidity.style.width = `${humidityPercent}%`;
+  elements.bars.humidity.style.width = `${Math.min(Math.max(data.humidity, 0), 100)}%`;
   elements.humidity.className = `data-value text-4xl font-bold ${getStyleClass(data.humidity, [30, 40, 60, 70], ['humidity-low', 'humidity-moderate', 'humidity-optimal', 'humidity-high', 'humidity-very-high'])}`;
 
   const pressureRange = 1100 - 500;
-  const pressurePercent = Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100);
-  elements.bars.pressure.style.width = `${pressurePercent}%`;
+  elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
   elements.pressure.className = `data-value text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
 
-  const altitudePercent = Math.min(Math.max(data.altitude / 2000 * 100, 0), 100);
-  elements.bars.altitude.style.width = `${altitudePercent}%`;
+  elements.bars.altitude.style.width = `${Math.min(Math.max(data.altitude / 2000 * 100, 0), 100)}%`;
   elements.altitude.className = `data-value text-4xl font-bold ${getStyleClass(data.altitude, [100, 500], ['altitude-low', 'altitude-medium', 'altitude-high'])}`;
 
   elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
@@ -107,9 +98,7 @@ function updateIndoorStyles(data) {
   const textClasses = { "Very Good": "text-green-400", Good: "text-cyan-300", Fair: "text-yellow-400", Poor: "text-orange-400", "Very Poor": "text-red-400" };
   
   const statusClass = statusClasses[data.airQualityStatus] || "status-good";
-  document.querySelectorAll("#indoor-content .status-indicator").forEach(indicator => {
-      indicator.className = `status-indicator ml-3 ${statusClass}`;
-  });
+  document.querySelector("#indoor-content .status-indicator").className = `status-indicator ml-3 ${statusClass}`;
   elements.airQualityStatus.className = `text-2xl font-bold mt-2 ${textClasses[data.airQualityStatus] || "text-cyan-300"}`;
 }
 
@@ -123,29 +112,18 @@ async function fetchIndoorData() {
     elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
     elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
     elements.pressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
-    elements.altitude.textContent = `${formatNumber(data.altitude)} m`;
-    elements.gasRaw.textContent = formatNumber(data.rawGas, 0);
+    elements.altitude.textContent = formatNumber(data.altitude);
+    elements.gasRaw.textContent = formatNumber(data.rawGas);
     elements.gasCompensated.textContent = `${formatNumber(data.compensatedGas, 1)} ppm`;
     elements.airQualityStatus.textContent = data.airQualityStatus || "--";
 
     updateIndoorStyles(data);
-    elements.lastUpdated.textContent = `Last Updated: ${formatTime(new Date())}`;
-    showToast(`Indoor data loaded in ${performance.now() - startTime}ms`);
+    elements.lastUpdated.textContent = `${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+    showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
   } catch (error) {
     console.error("Fetch indoor error:", error);
-    showToast("Failed to update indoor data. Retrying...", true);
-    resetIndoorUI();
+    showToast("Failed to update indoor data", true);
   }
-}
-
-function resetIndoorUI() {
-  Object.assign(elements, {
-    temperature: { textContent: "-- °C" }, humidity: { textContent: "-- %" },
-    pressure: { textContent: "-- hPa" }, altitude: { textContent: "-- m" },
-    gasRaw: { textContent: "--" }, gasCompensated: { textContent: "-- ppm" },
-    airQualityStatus: { textContent: "--" }
-  });
-  Object.values(elements.bars).forEach(bar => bar.style.width = "0%");
 }
 
 // --- OUTDOOR UI & DATA ---
@@ -162,12 +140,12 @@ async function fetchOutdoorData(forceRefresh = false) {
         
         updateOutdoorUI(bmkgData);
 
-        elements.lastUpdated.textContent = `Last Updated: ${formatTime(new Date())}`;
+        elements.lastUpdated.textContent = `${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
         isOutdoorDataLoaded = true;
-        showToast(`Outdoor data loaded in ${(performance.now() - startTime).toFixed(1)}ms`);
+        showToast(`Outdoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
     } catch (error) {
         console.error("Fetch outdoor error:", error);
-        showToast("Failed to update outdoor data. Retrying...", true);
+        showToast("Failed to update outdoor data", true);
         resetOutdoorUI();
     }
 }
@@ -181,10 +159,10 @@ function updateOutdoorUI(bmkgData) {
     elements.weatherDescription.textContent = weatherNow.weather_desc;
     elements.weatherIcon.src = weatherNow.image;
     elements.weatherIcon.style.display = 'block';
-    elements.outdoorTemperature.textContent = `${formatNumber(weatherNow.t, 1)} °C`;
-    elements.outdoorHumidity.textContent = `${formatNumber(weatherNow.hu, 1)} %`;
+    elements.outdoorTemperature.textContent = `${formatNumber(weatherNow.t)}°`;
+    elements.outdoorHumidity.textContent = `${formatNumber(weatherNow.hu)}%`;
     elements.windSpeed.textContent = formatNumber(weatherNow.ws * 3.6, 1);
-    elements.windDirection.textContent = `From ${weatherNow.wd}`;
+    elements.windDirection.textContent = `From ${weatherNow.wd} to ${weatherNow.wd_to}`;
     elements.visibility.textContent = weatherNow.vs_text.replace(/[<>]/g, '').trim();
 
     updateForecastUI(data[0].cuaca);
@@ -193,7 +171,7 @@ function updateOutdoorUI(bmkgData) {
 function updateForecastUI(forecastData) {
     elements.forecastContainer.innerHTML = '';
     const now = new Date();
-    const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    const todayStr = now.toLocaleDateString('en-CA');
 
     const futureForecasts = forecastData.flat()
         .filter(item => new Date(item.local_datetime) > now)
@@ -229,9 +207,10 @@ function resetOutdoorUI() {
     elements.locationDetails.textContent = "Could not fetch data";
     elements.weatherDescription.textContent = "--";
     elements.weatherIcon.style.display = 'none';
-    elements.outdoorTemperature.textContent = "-- °C";
-    elements.outdoorHumidity.textContent = "-- %";
+    elements.outdoorTemperature.textContent = "--°";
+    elements.outdoorHumidity.textContent = "--%";
     elements.windSpeed.textContent = "--";
+    elements.windDirection.textContent = "From -- to --";
     elements.visibility.textContent = "--";
     elements.forecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Failed to load forecast.</p>`;
 }

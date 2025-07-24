@@ -63,7 +63,7 @@ app.get("/api/blynk", async (req, res) => {
       data.altitude = 0;
     }
 
-    console.log("Sending sensor data:", JSON.stringify(data, null, 2));
+    // Removed the console.log for sensor data to keep the terminal clean
     res.json(data);
   } catch (error) {
     console.error("API Error:", error);
@@ -103,6 +103,5 @@ function parseSafeFloat(value, fallback = 0) {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Blynk pins being monitored: ${PINS.join(", ")}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

@@ -247,6 +247,13 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.data-source-text {
+  text-align: right;
+  font-size: 0.75rem; /* 12px */
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 1rem;
+}
+
 /* Pressure and Altitude specific styles */
 .pressure-normal {
   color: #00ff9d;
