@@ -15,6 +15,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   </head>
   <body class="relative overflow-x-hidden">
     <div class="orb orb-1"></div>
@@ -219,6 +220,28 @@
             </div>
           </div>
         </div>
+
+        <div class="glass-card rounded-xl p-6 mb-8">
+          <div
+            class="flex flex-col sm:flex-row justify-between items-center mb-4"
+          >
+            <h2 class="text-lg font-medium mb-3 sm:mb-0">
+              <i class="fas fa-chart-line text-cyan-300 mr-2"></i>SENSOR HISTORY
+            </h2>
+            <div id="chart-filters" class="flex flex-wrap justify-center gap-2">
+              <button class="chart-filter-btn" data-range="1d">1D</button>
+              <button class="chart-filter-btn active" data-range="3d">
+                3D
+              </button>
+              <button class="chart-filter-btn" data-range="1w">1W</button>
+              <button class="chart-filter-btn" data-range="1m">1M</button>
+              <button class="chart-filter-btn" data-range="6m">6M</button>
+              <button class="chart-filter-btn" data-range="12m">1Y</button>
+            </div>
+          </div>
+          <div id="chart"></div>
+        </div>
+
         <p class="data-source-text">Source: ESP8266 & Blynk</p>
       </div>
 

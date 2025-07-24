@@ -46,6 +46,7 @@ const elements = {
 let activeTab = 'indoor';
 let indoorDataInterval;
 let isOutdoorDataLoaded = false;
+let historyChart;
 
 // --- UTILITY FUNCTIONS ---
 function formatNumber(value, decimals = 0) {
@@ -68,6 +69,81 @@ function updateClock() {
   elements.time.textContent = now.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
   elements.date.textContent = now.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 }
+
+// --- CHARTING ---
+const chartOptions = {
+    chart: {
+        type: 'line',
+        height: 350,
+        zoom: { enabled: false },
+        toolbar: { show: false },
+        background: 'transparent'
+    },
+    series: [],
+    stroke: { curve: 'smooth', width: 2 },
+    xaxis: {
+        type: 'datetime',
+        labels: { style: { colors: '#9CA3AF' } }
+    },
+    yaxis: {
+        labels: {
+            style: { colors: '#9CA3AF' },
+            formatter: (value) => value ? value.toFixed(1) : '0'
+        }
+    },
+    grid: {
+        borderColor: 'rgba(255, 255, 255, 0.1)'
+    },
+    tooltip: {
+        theme: 'dark',
+        x: { format: 'dd MMM yyyy - HH:mm' }
+    },
+    noData: {
+        text: 'Loading chart data...',
+        style: { color: '#FFFFFF', fontSize: '14px' }
+    },
+    colors: ['#00F0FF', '#7B2DFF', '#00E396', '#FEB019', '#FF4560', '#775DD0']
+};
+
+function initChart() {
+    if (document.querySelector("#chart") && !historyChart) {
+        historyChart = new ApexCharts(document.querySelector("#chart"), chartOptions);
+        historyChart.render();
+    }
+}
+
+async function updateChart(range = '3d') {
+    if (!historyChart) return;
+    try {
+        const response = await fetch(`/api/history?range=${range}`);
+        if (!response.ok) throw new Error("Failed to fetch history data");
+        const data = await response.json();
+
+        const series = {
+            temperature: { name: 'Temperature (°C)', data: [] },
+            humidity: { name: 'Humidity (%)', data: [] },
+            pressure: { name: 'Pressure (hPa)', data: [] },
+        };
+
+        data.forEach(row => {
+            const timestamp = new Date(row.timestamp).getTime();
+            series.temperature.data.push([timestamp, row.temperature]);
+            series.humidity.data.push([timestamp, row.humidity]);
+            series.pressure.data.push([timestamp, row.pressure]);
+        });
+        
+        historyChart.updateSeries([series.temperature, series.humidity, series.pressure]);
+        
+        document.querySelectorAll('.chart-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.range === range);
+        });
+
+    } catch (error) {
+        console.error("Failed to update chart:", error);
+        historyChart.updateSeries([]); // Clear chart on error
+    }
+}
+
 
 // --- INDOOR UI & DATA ---
 function updateIndoorStyles(data) {
@@ -228,6 +304,9 @@ function switchTab(tab) {
 
     if (isIndoor) {
         fetchIndoorData();
+        if (historyChart) {
+             updateChart('3d'); // Load default chart view
+        }
         indoorDataInterval = setInterval(fetchIndoorData, 30000);
     } else {
         fetchOutdoorData();
@@ -238,6 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.indoorTabButton.addEventListener('click', () => switchTab('indoor'));
   elements.outdoorTabButton.addEventListener('click', () => switchTab('outdoor'));
 
+  initChart();
   switchTab('indoor'); 
   
   setInterval(updateClock, 1000);
@@ -246,10 +326,23 @@ document.addEventListener("DOMContentLoaded", () => {
   elements.refreshButton.addEventListener("click", () => {
     elements.refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> Refreshing...';
     const fetchPromise = activeTab === 'indoor' ? fetchIndoorData() : fetchOutdoorData(true);
+    
+    if(activeTab === 'indoor') {
+        // Also refresh chart when refreshing indoor tab
+        updateChart(document.querySelector('.chart-filter-btn.active').dataset.range);
+    }
+
     fetchPromise.finally(() => {
       setTimeout(() => {
         elements.refreshButton.innerHTML = '<i class="fas fa-sync mr-2"></i> Refresh Data';
       }, 1000);
     });
+  });
+
+  // Add event listeners for chart filters
+  document.querySelectorAll('.chart-filter-btn').forEach(button => {
+      button.addEventListener('click', () => {
+          updateChart(button.dataset.range);
+      });
   });
 });

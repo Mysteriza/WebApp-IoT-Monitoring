@@ -1,24 +1,23 @@
 {
   "version": 2,
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/server.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
-    }
+    { "source": "/api/(.*)", "destination": "/api/server.js" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ],
   "headers": [
     {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Permissions-Policy",
-          "value": "geolocation=(), microphone=(), camera=()"
-        }
-      ]
+      "headers": [{ "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/log-data",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cleanup-data",
+      "schedule": "0 1 * * *"
     }
   ]
 }
