@@ -46,7 +46,6 @@ const elements = {
 let activeTab = 'indoor';
 let indoorDataInterval;
 let isOutdoorDataLoaded = false;
-let historyChart;
 
 // --- UTILITY FUNCTIONS ---
 function formatNumber(value, decimals = 0) {
@@ -70,136 +69,63 @@ function updateClock() {
   elements.date.textContent = now.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 }
 
-// --- CHARTING ---
-const chartOptions = {
-    chart: {
-        type: 'line',
-        height: 350,
-        zoom: { enabled: false },
-        toolbar: { show: false },
-        background: 'transparent'
-    },
-    series: [],
-    stroke: { curve: 'smooth', width: 2 },
-    xaxis: {
-        type: 'datetime',
-        labels: { style: { colors: '#9CA3AF' } }
-    },
-    yaxis: {
-        labels: {
-            style: { colors: '#9CA3AF' },
-            formatter: (value) => value ? value.toFixed(1) : '0'
-        }
-    },
-    grid: {
-        borderColor: 'rgba(255, 255, 255, 0.1)'
-    },
-    tooltip: {
-        theme: 'dark',
-        x: { format: 'dd MMM yyyy - HH:mm' }
-    },
-    noData: {
-        text: 'Loading chart data...',
-        style: { color: '#FFFFFF', fontSize: '14px' }
-    },
-    colors: ['#00F0FF', '#7B2DFF', '#00E396', '#FEB019', '#FF4560', '#775DD0']
-};
-
-function initChart() {
-    if (document.querySelector("#chart") && !historyChart) {
-        historyChart = new ApexCharts(document.querySelector("#chart"), chartOptions);
-        historyChart.render();
-    }
-}
-
-async function updateChart(range = '3d') {
-    if (!historyChart) return;
-    try {
-        const response = await fetch(`/api/history?range=${range}`);
-        if (!response.ok) throw new Error("Failed to fetch history data");
-        const data = await response.json();
-
-        const series = {
-            temperature: { name: 'Temperature (°C)', data: [] },
-            humidity: { name: 'Humidity (%)', data: [] },
-            pressure: { name: 'Pressure (hPa)', data: [] },
-        };
-
-        data.forEach(row => {
-            const timestamp = new Date(row.timestamp).getTime();
-            series.temperature.data.push([timestamp, row.temperature]);
-            series.humidity.data.push([timestamp, row.humidity]);
-            series.pressure.data.push([timestamp, row.pressure]);
-        });
-        
-        historyChart.updateSeries([series.temperature, series.humidity, series.pressure]);
-        
-        document.querySelectorAll('.chart-filter-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.range === range);
-        });
-
-    } catch (error) {
-        console.error("Failed to update chart:", error);
-        historyChart.updateSeries([]); // Clear chart on error
-    }
-}
-
-
 // --- INDOOR UI & DATA ---
 function updateIndoorStyles(data) {
-  const getStyleClass = (value, thresholds, classes) => {
-    for (let i = 0; i < thresholds.length; i++) {
-      if (value < thresholds[i]) return classes[i];
-    }
-    return classes[classes.length - 1];
-  };
+    const getStyleClass = (value, thresholds, classes) => {
+        for (let i = 0; i < thresholds.length; i++) {
+            if (value < thresholds[i]) return classes[i];
+        }
+        return classes[classes.length - 1];
+    };
 
-  elements.bars.temp.style.width = `${Math.min(Math.max((data.temperature / 40) * 100, 0), 100)}%`;
-  elements.temperature.className = `data-value text-4xl font-bold ${getStyleClass(data.temperature, [20, 27, 30], ['temp-cold', 'temp-cool', 'temp-warm', 'temp-hot'])}`;
+    elements.bars.temp.style.width = `${Math.min(Math.max((data.temperature / 40) * 100, 0), 100)}%`;
+    elements.temperature.className = `data-value text-4xl font-bold ${getStyleClass(data.temperature, [20, 27, 30], ['temp-cold', 'temp-cool', 'temp-warm', 'temp-hot'])}`;
 
-  elements.bars.humidity.style.width = `${Math.min(Math.max(data.humidity, 0), 100)}%`;
-  elements.humidity.className = `data-value text-4xl font-bold ${getStyleClass(data.humidity, [30, 40, 60, 70], ['humidity-low', 'humidity-moderate', 'humidity-optimal', 'humidity-high', 'humidity-very-high'])}`;
+    elements.bars.humidity.style.width = `${Math.min(Math.max(data.humidity, 0), 100)}%`;
+    elements.humidity.className = `data-value text-4xl font-bold ${getStyleClass(data.humidity, [30, 40, 60, 70], ['humidity-low', 'humidity-moderate', 'humidity-optimal', 'humidity-high', 'humidity-very-high'])}`;
 
-  const pressureRange = 1100 - 500;
-  elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
-  elements.pressure.className = `data-value text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
+    const pressureRange = 1100 - 500;
+    elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
+    elements.pressure.className = `data-value text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
 
-  elements.bars.altitude.style.width = `${Math.min(Math.max(data.altitude / 2000 * 100, 0), 100)}%`;
-  elements.altitude.className = `data-value text-4xl font-bold ${getStyleClass(data.altitude, [100, 500], ['altitude-low', 'altitude-medium', 'altitude-high'])}`;
+    elements.bars.altitude.style.width = `${Math.min(Math.max(data.altitude / 2000 * 100, 0), 100)}%`;
+    elements.altitude.className = `data-value text-4xl font-bold ${getStyleClass(data.altitude, [100, 500], ['altitude-low', 'altitude-medium', 'altitude-high'])}`;
 
-  elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
-  elements.bars.gasCompensated.style.width = `${Math.min(Math.max((data.compensatedGas / 1000) * 100, 0), 100)}%`;
+    elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
+    elements.bars.gasCompensated.style.width = `${Math.min(Math.max((data.compensatedGas / 1000) * 100, 0), 100)}%`;
 
-  const statusClasses = { "Very Good": "status-excellent", Good: "status-good", Fair: "status-fair", Poor: "status-poor", "Very Poor": "status-critical" };
-  const textClasses = { "Very Good": "text-green-400", Good: "text-cyan-300", Fair: "text-yellow-400", Poor: "text-orange-400", "Very Poor": "text-red-400" };
-  
-  const statusClass = statusClasses[data.airQualityStatus] || "status-good";
-  document.querySelector("#indoor-content .status-indicator").className = `status-indicator ml-3 ${statusClass}`;
-  elements.airQualityStatus.className = `text-2xl font-bold mt-2 ${textClasses[data.airQualityStatus] || "text-cyan-300"}`;
+    const statusClasses = { "Very Good": "status-excellent", Good: "status-good", Fair: "status-fair", Poor: "status-poor", "Very Poor": "status-critical" };
+    const textClasses = { "Very Good": "text-green-400", Good: "text-cyan-300", Fair: "text-yellow-400", Poor: "text-orange-400", "Very Poor": "text-red-400" };
+    
+    const statusClass = statusClasses[data.airQualityStatus] || "status-good";
+    const statusIndicator = document.querySelector("#indoor-content .status-indicator");
+    if (statusIndicator) statusIndicator.className = `status-indicator ml-3 ${statusClass}`;
+    
+    if (elements.airQualityStatus) elements.airQualityStatus.className = `text-2xl font-bold mt-2 ${textClasses[data.airQualityStatus] || "text-cyan-300"}`;
 }
 
 async function fetchIndoorData() {
-  try {
-    const startTime = performance.now();
-    const response = await fetch("/api/blynk");
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json();
-    
-    elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
-    elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
-    elements.pressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
-    elements.altitude.textContent = formatNumber(data.altitude);
-    elements.gasRaw.textContent = formatNumber(data.rawGas);
-    elements.gasCompensated.textContent = `${formatNumber(data.compensatedGas, 1)} ppm`;
-    elements.airQualityStatus.textContent = data.airQualityStatus || "--";
+    try {
+        const startTime = performance.now();
+        const response = await fetch("/api/blynk");
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        
+        elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
+        elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
+        elements.pressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
+        elements.altitude.textContent = formatNumber(data.altitude);
+        elements.gasRaw.textContent = formatNumber(data.rawGas);
+        elements.gasCompensated.textContent = `${formatNumber(data.compensatedGas, 1)} ppm`;
+        elements.airQualityStatus.textContent = data.airQualityStatus || "--";
 
-    updateIndoorStyles(data);
-    elements.lastUpdated.textContent = `${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
-    showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
-  } catch (error) {
-    console.error("Fetch indoor error:", error);
-    showToast("Failed to update indoor data", true);
-  }
+        updateIndoorStyles(data);
+        elements.lastUpdated.textContent = `Last Updated: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+        showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
+    } catch (error) {
+        console.error("Fetch indoor error:", error);
+        showToast("Failed to update indoor data", true);
+    }
 }
 
 // --- OUTDOOR UI & DATA ---
@@ -216,7 +142,7 @@ async function fetchOutdoorData(forceRefresh = false) {
         
         updateOutdoorUI(bmkgData);
 
-        elements.lastUpdated.textContent = `${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+        elements.lastUpdated.textContent = `Last Updated: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
         isOutdoorDataLoaded = true;
         showToast(`Outdoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
     } catch (error) {
@@ -304,9 +230,6 @@ function switchTab(tab) {
 
     if (isIndoor) {
         fetchIndoorData();
-        if (historyChart) {
-             updateChart('3d'); // Load default chart view
-        }
         indoorDataInterval = setInterval(fetchIndoorData, 30000);
     } else {
         fetchOutdoorData();
@@ -314,35 +237,21 @@ function switchTab(tab) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  elements.indoorTabButton.addEventListener('click', () => switchTab('indoor'));
-  elements.outdoorTabButton.addEventListener('click', () => switchTab('outdoor'));
-
-  initChart();
   switchTab('indoor'); 
   
   setInterval(updateClock, 1000);
   updateClock();
   
+  elements.indoorTabButton.addEventListener('click', () => switchTab('indoor'));
+  elements.outdoorTabButton.addEventListener('click', () => switchTab('outdoor'));
+  
   elements.refreshButton.addEventListener("click", () => {
     elements.refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> Refreshing...';
     const fetchPromise = activeTab === 'indoor' ? fetchIndoorData() : fetchOutdoorData(true);
-    
-    if(activeTab === 'indoor') {
-        // Also refresh chart when refreshing indoor tab
-        updateChart(document.querySelector('.chart-filter-btn.active').dataset.range);
-    }
-
     fetchPromise.finally(() => {
       setTimeout(() => {
         elements.refreshButton.innerHTML = '<i class="fas fa-sync mr-2"></i> Refresh Data';
       }, 1000);
     });
-  });
-
-  // Add event listeners for chart filters
-  document.querySelectorAll('.chart-filter-btn').forEach(button => {
-      button.addEventListener('click', () => {
-          updateChart(button.dataset.range);
-      });
   });
 });
