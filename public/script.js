@@ -70,6 +70,17 @@ function updateClock() {
   elements.date.textContent = now.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function getWindDirectionFullName(abbr) {
+    const directions = {
+        'N': 'North', 'NNE': 'North-Northeast', 'NE': 'Northeast', 'ENE': 'East-Northeast',
+        'E': 'East', 'ESE': 'East-Southeast', 'SE': 'Southeast', 'SSE': 'South-Southeast',
+        'S': 'South', 'SSW': 'South-Southwest', 'SW': 'Southwest', 'WSW': 'West-Southwest',
+        'W': 'West', 'WNW': 'West-Northwest', 'NW': 'Northwest', 'NNW': 'North-Northwest'
+    };
+    return directions[abbr] || abbr;
+}
+
+
 // --- INDOOR UI & DATA ---
 function updateIndoorStyles(data) {
     const getStyleClass = (value, thresholds, classes) => {
@@ -166,7 +177,7 @@ function updateOutdoorUI(bmkgData) {
     elements.outdoorHumidity.textContent = `${formatNumber(weatherNow.hu)}%`;
     elements.cloudCoverage.textContent = `${formatNumber(weatherNow.tcc)}%`;
     elements.windSpeed.textContent = formatNumber(weatherNow.ws * 3.6, 1);
-    elements.windDirection.textContent = `From ${weatherNow.wd} to ${weatherNow.wd_to}`;
+    elements.windDirection.textContent = `From ${getWindDirectionFullName(weatherNow.wd)} to ${getWindDirectionFullName(weatherNow.wd_to)}`;
     elements.visibility.textContent = weatherNow.vs_text.replace(/[<>]/g, '').trim();
 
     updateForecastUI(data[0].cuaca);

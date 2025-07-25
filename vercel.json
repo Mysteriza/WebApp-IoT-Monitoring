@@ -9,15 +9,5 @@
       "source": "/(.*)",
       "headers": [{ "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }]
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/log-data",
-      "schedule": "*/10 * * * *"
-    },
-    {
-      "path": "/api/cleanup-data",
-      "schedule": "0 1 * * *"
-    }
   ]
 }
