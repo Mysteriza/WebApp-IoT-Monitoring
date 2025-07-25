@@ -40,24 +40,20 @@ Follow these steps to set up the IoT Monitoring dashboard on your local machine 
 - **Blynk Account**: Set up your Blynk project and get the `BLYNK_AUTH_TOKEN`.
 
 ### Steps
-1. Clone this repository to your local machine:
-   ```
-   git clone https://github.com/Mysteriza/WebApp-IoT-Monitoring.git && cd WebApp-IoT-Monitoring
-   ```
-
+1. Clone this repository:
+   ```
+   git clone https://github.com/Mysteriza/WebApp-IoT-Monitoring.git && cd WebApp-IoT-Monitoring
+   ```
 2. Install Dependencies
-   ```
-   npm install
-   ```
-
+   ```
+   npm install
+   ```
 3. Create a `.env.local` file in the root directory and add your Blynk auth token:
-   ```
-   BLYNK_AUTH_TOKEN=your_blynk_auth_token
-   ```
-
-4. **Run Locally**
-   Start the development server:
-   ```
-   npm run dev
-   ```
-   Open http://localhost:3000 in your browser to see the dashboard.
+   ```
+   BLYNK_AUTH_TOKEN=your_blynk_auth_token
+   ```
+4. Start the development server:
+   ```
+   npm start
+   ```
+5. Open http://localhost:3000 in your browser to see the dashboard.
