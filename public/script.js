@@ -29,6 +29,7 @@ const elements = {
   weatherDescription: document.getElementById("weather-description"),
   outdoorTemperature: document.getElementById("outdoor-temperature"),
   outdoorHumidity: document.getElementById("outdoor-humidity"),
+  cloudCoverage: document.getElementById("cloud-coverage"),
   windSpeed: document.getElementById("wind-speed"),
   windDirection: document.getElementById("wind-direction"),
   visibility: document.getElementById("visibility"),
@@ -163,6 +164,7 @@ function updateOutdoorUI(bmkgData) {
     elements.weatherIcon.style.display = 'block';
     elements.outdoorTemperature.textContent = `${formatNumber(weatherNow.t)}°`;
     elements.outdoorHumidity.textContent = `${formatNumber(weatherNow.hu)}%`;
+    elements.cloudCoverage.textContent = `${formatNumber(weatherNow.tcc)}%`;
     elements.windSpeed.textContent = formatNumber(weatherNow.ws * 3.6, 1);
     elements.windDirection.textContent = `From ${weatherNow.wd} to ${weatherNow.wd_to}`;
     elements.visibility.textContent = weatherNow.vs_text.replace(/[<>]/g, '').trim();
@@ -211,6 +213,7 @@ function resetOutdoorUI() {
     elements.weatherIcon.style.display = 'none';
     elements.outdoorTemperature.textContent = "--°";
     elements.outdoorHumidity.textContent = "--%";
+    elements.cloudCoverage.textContent = "--%";
     elements.windSpeed.textContent = "--";
     elements.windDirection.textContent = "From -- to --";
     elements.visibility.textContent = "--";
