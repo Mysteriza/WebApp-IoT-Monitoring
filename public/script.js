@@ -104,7 +104,7 @@ function updateIndoorStyles(data) {
     elements.altitude.className = `data-value text-4xl font-bold ${getStyleClass(data.altitude, [100, 500], ['altitude-low', 'altitude-medium', 'altitude-high'])}`;
 
     elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
-    elements.bars.gasCompensated.style.width = `${Math.min(Math.max((data.compensatedGas / 1000) * 100, 0), 100)}%`;
+    elements.bars.gasCompensated.style.width = `${Math.min(Math.max((data.compensatedGas / 500) * 100, 0), 100)}%`;
 
     const statusClasses = { "Very Good": "status-excellent", Good: "status-good", Fair: "status-fair", Poor: "status-poor", "Very Poor": "status-critical" };
     const textClasses = { "Very Good": "text-green-400", Good: "text-cyan-300", Fair: "text-yellow-400", Poor: "text-orange-400", "Very Poor": "text-red-400" };
