@@ -132,7 +132,7 @@ async function fetchIndoorData() {
         elements.airQualityStatus.textContent = data.airQualityStatus || "--";
 
         updateIndoorStyles(data);
-        elements.lastUpdated.textContent = `Last Updated: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+        elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
         showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
     } catch (error) {
         console.error("Fetch indoor error:", error);
@@ -154,7 +154,7 @@ async function fetchOutdoorData(forceRefresh = false) {
         
         updateOutdoorUI(bmkgData);
 
-        elements.lastUpdated.textContent = `Last Updated: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+        elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
         isOutdoorDataLoaded = true;
         showToast(`Outdoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
     } catch (error) {
