@@ -1,102 +1,64 @@
 require("dotenv").config({ path: ".env.local" });
 const express = require("express");
 const fetch = require("node-fetch");
+const https = require("https");
 
 const app = express();
 const BLYNK_SERVER = "blynk.cloud";
-const BLYNK_AUTH_TOKEN = process.env.BLYNK_AUTH_TOKEN;
-const PINS = ["V0", "V1", "V5", "V6", "V7", "V8", "V9"];
+const TOKEN = process.env.BLYNK_AUTH_TOKEN;
 
-const BMKG_API_URL = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=32.73.14.1002";
+// Keep-alive agent to reuse TLS connection
+const agent = new https.Agent({ keepAlive: true });
 
 app.use(express.static("public"));
 app.use(express.json());
 
-// Endpoint for fetching indoor sensor data from Blynk
-app.get("/api/blynk", async (req, res) => {
+// Single call for all pins (V0,V1,V5,V6,V7,V8,V9)
+app.get("/api/blynk", async (_req, res) => {
   try {
-    if (!BLYNK_AUTH_TOKEN) {
-      throw new Error("BLYNK_AUTH_TOKEN is not defined");
-    }
+    if (!TOKEN) throw new Error("BLYNK_AUTH_TOKEN is not defined");
 
-    const pinRequests = PINS.map(async (pin) => {
-      try {
-        const response = await fetch(
-          `https://${BLYNK_SERVER}/external/api/get?token=${BLYNK_AUTH_TOKEN}&${pin}`
-        );
-        
-        if (!response.ok) {
-          console.error(`Failed to fetch pin ${pin}: ${response.status}`);
-          return null;
-        }
-        
-        const text = await response.text();
-        return text === "null" || text === "undefined" ? null : text;
-      } catch (error) {
-        console.error(`Error fetching pin ${pin}:`, error);
-        return null;
-      }
-    });
+    // OPTION A: getAll (simple)
+    // const url = `https://${BLYNK_SERVER}/external/api/getAll?token=${TOKEN}`;
 
-    const responses = await Promise.all(pinRequests);
+    // OPTION B: get multiple (explicit pins)
+    const url = `https://${BLYNK_SERVER}/external/api/get?token=${TOKEN}&V0&V1&V5&V6&V7&V8&V9`;
+
+    const r = await fetch(url, { agent });
+    if (!r.ok) throw new Error(`Blynk get failed: ${r.status}`);
+    const j = await r.json(); // e.g. { "V0": 27.3, "V1": 60.1, ... }
+
+    const parse = (x, f=0)=> (x===null||x===undefined||x==="null"||x==="undefined"||Number.isNaN(parseFloat(x))) ? f : parseFloat(x);
 
     const data = {
-      temperature: parseSafeFloat(responses[0]),
-      humidity: parseSafeFloat(responses[1]),
-      rawGas: parseSafeFloat(responses[2]),
-      compensatedGas: parseSafeFloat(responses[3]),
-      airQualityStatus: responses[4] || "--",
-      pressure: parseSafeFloat(responses[5], 1013.25),
-      altitude: parseSafeFloat(responses[6], 0)
+      temperature:      parse(j.V0),
+      humidity:         parse(j.V1),
+      rawGas:           parse(j.V5),
+      compensatedGas:   parse(j.V6),         // IAQ index (bukan ppm)
+      airQualityStatus: j.V7 || "--",
+      pressure:         parse(j.V8, 1013.25),
+      altitude:         parse(j.V9, 0)
     };
 
-    if (data.pressure < 800 || data.pressure > 1200) {
-      console.warn(`Invalid pressure value: ${data.pressure}`);
-      data.pressure = 1013.25;
-    }
+    if (data.pressure < 800 || data.pressure > 1200) data.pressure = 1013.25;
+    if (data.altitude < -100 || data.altitude > 9000) data.altitude = 0;
 
-    if (data.altitude < -100 || data.altitude > 9000) {
-      console.warn(`Invalid altitude value: ${data.altitude}`);
-      data.altitude = 0;
-    }
     res.json(data);
-  } catch (error) {
-    console.error("API Error:", error);
-    res.status(500).json({ 
-      error: error.message,
-      details: "Failed to fetch sensor data",
-      timestamp: new Date().toISOString()
-    });
+  } catch (e) {
+    res.status(500).json({ error: e.message, details: "Failed to fetch sensor data" });
   }
 });
 
-// Endpoint for fetching outdoor weather data from BMKG
-app.get("/api/bmkg", async (req, res) => {
+const BMKG_API_URL = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=32.73.14.1002";
+app.get("/api/bmkg", async (_req, res) => {
   try {
-    const response = await fetch(BMKG_API_URL);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    console.error("BMKG API Error:", error);
-    res.status(500).json({
-      error: error.message,
-      details: "Failed to fetch weather data from BMKG",
-      timestamp: new Date().toISOString()
-    });
+    const r = await fetch(BMKG_API_URL, { agent });
+    if (!r.ok) throw new Error(`BMKG error: ${r.status}`);
+    res.json(await r.json());
+  } catch (e) {
+    res.status(500).json({ error: e.message, details: "Failed to fetch weather data from BMKG" });
   }
 });
-
-
-function parseSafeFloat(value, fallback = 0) {
-  if (value === null || value === undefined) return fallback;
-  const num = parseFloat(value);
-  return isNaN(num) ? fallback : num;
-}
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
