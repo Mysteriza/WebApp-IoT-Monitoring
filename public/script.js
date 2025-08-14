@@ -126,9 +126,9 @@ async function fetchIndoorData() {
         elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
         elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
         elements.pressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
-        elements.altitude.textContent = `${formatNumber(data.altitude)} MDPL`;
+        elements.altitude.textContent = `${formatNumber(data.altitude)} m`;
         elements.gasRaw.textContent = formatNumber(data.rawGas);
-        elements.gasCompensated.textContent = `${formatNumber(data.compensatedGas, 1)}`;
+        elements.gasCompensated.textContent = formatNumber(data.compensatedGas);
         elements.airQualityStatus.textContent = data.airQualityStatus || "--";
 
         updateIndoorStyles(data);
