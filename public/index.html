@@ -224,92 +224,160 @@
           >
             Loading Location...
           </h2>
-          <p class="text-gray-300" id="location-details">
-            Fetching weather data
-          </p>
+          <p class="text-gray-400 text-sm" id="location-details"></p>
         </div>
 
-        <div
-          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 mb-8"
-        >
-          <div class="outdoor-card glass-card">
-            <img
-              id="weather-icon"
-              src=""
-              alt="Weather Icon"
-              class="w-20 h-20 mb-2"
-              style="display: none"
-            />
-            <p
-              id="weather-description"
-              class="data-value text-xl font-bold text-cyan-300"
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <div
+            class="glass-card rounded-xl col-span-2 md:col-span-4 p-4 md:p-6"
+          >
+            <div
+              class="flex flex-col md:flex-row justify-between items-center h-full"
             >
-              --
-            </p>
-            <h2 class="text-base font-medium text-gray-400 mt-1">WEATHER</h2>
+              <div class="flex items-center">
+                <div
+                  id="weather-icon-container"
+                  class="w-20 h-20 md:w-28 md:h-28 flex items-center justify-center"
+                ></div>
+                <div class="ml-2 md:ml-4">
+                  <p
+                    id="outdoor-temperature"
+                    class="data-value font-bold temp-cool text-5xl md:text-7xl"
+                  >
+                    --°
+                  </p>
+                  <p
+                    id="weather-description"
+                    class="text-lg md:text-xl font-bold text-cyan-300 -mt-2"
+                  >
+                    --
+                  </p>
+                </div>
+              </div>
+              <div class="text-center md:text-right mt-3 md:mt-0">
+                <p class="text-gray-300 text-base md:text-lg">
+                  Feels like:
+                  <span id="apparent-temperature" class="font-bold">--°</span>
+                </p>
+              </div>
+            </div>
           </div>
+
           <div class="outdoor-card glass-card">
-            <i class="fas fa-thermometer-half text-cyan-300 text-3xl mb-3"></i>
-            <p
-              id="outdoor-temperature"
-              class="data-value text-4xl font-bold temp-cool"
-            >
-              --°
-            </p>
-            <h2 class="text-base font-medium text-gray-400 mt-2">
-              TEMPERATURE
-            </h2>
-          </div>
-          <div class="outdoor-card glass-card">
-            <i class="fas fa-tint text-cyan-300 text-3xl mb-3"></i>
+            <i class="fas fa-tint text-cyan-300 text-2xl md:text-3xl mb-2"></i>
             <p
               id="outdoor-humidity"
-              class="data-value text-4xl font-bold humidity-optimal"
+              class="data-value text-3xl md:text-4xl font-bold humidity-optimal"
             >
               --%
             </p>
-            <h2 class="text-base font-medium text-gray-400 mt-2">HUMIDITY</h2>
-          </div>
-          <div class="outdoor-card glass-card">
-            <i class="fas fa-cloud text-cyan-300 text-3xl mb-3"></i>
-            <p id="cloud-coverage" class="data-value text-4xl font-bold">--%</p>
-            <h2 class="text-base font-medium text-gray-400 mt-2">
-              CLOUD COVER
+            <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+              HUMIDITY
             </h2>
           </div>
+
           <div class="outdoor-card glass-card">
-            <i class="fas fa-wind text-cyan-300 text-3xl mb-3"></i>
+            <i class="fas fa-wind text-cyan-300 text-2xl md:text-3xl mb-2"></i>
             <div class="flex items-baseline">
-              <p id="wind-speed" class="data-value text-4xl font-bold">--</p>
-              <span class="text-sm text-gray-300 ml-1">km/h</span>
+              <p
+                id="wind-speed"
+                class="data-value text-3xl md:text-4xl font-bold"
+              >
+                --
+              </p>
+              <span class="text-xs md:text-sm text-gray-300 ml-1">km/h</span>
             </div>
-            <p id="wind-direction" class="text-xs text-gray-400 mt-1">
-              From -- to --
-            </p>
-            <h2 class="text-base font-medium text-gray-400 mt-2">WIND</h2>
+            <p id="wind-direction" class="text-sm text-gray-400 mt-1">--</p>
+            <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+              WIND
+            </h2>
           </div>
+
           <div class="outdoor-card glass-card">
-            <i class="fas fa-eye text-cyan-300 text-3xl mb-3"></i>
+            <i
+              class="fas fa-tachometer-alt text-cyan-300 text-2xl md:text-3xl mb-2"
+            ></i>
             <div class="flex items-baseline">
-              <p id="visibility" class="data-value text-4xl font-bold">--</p>
-              <span class="text-sm text-gray-300 ml-1">km</span>
+              <p
+                id="pressure"
+                class="data-value text-3xl md:text-4xl font-bold"
+              >
+                --
+              </p>
+              <span class="text-xs md:text-sm text-gray-300 ml-1">hPa</span>
             </div>
-            <h2 class="text-base font-medium text-gray-400 mt-2">VISIBILITY</h2>
+            <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+              PRESSURE
+            </h2>
+          </div>
+
+          <div class="outdoor-card glass-card">
+            <i
+              class="fas fa-cloud-showers-heavy text-2xl md:text-3xl text-cyan-300 mb-2"
+            ></i>
+            <div class="flex items-baseline">
+              <p
+                id="precipitation"
+                class="data-value text-3xl md:text-4xl font-bold"
+              >
+                --
+              </p>
+              <span class="text-xs md:text-sm text-gray-300 ml-1">mm</span>
+            </div>
+            <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+              PRECIPITATION
+            </h2>
           </div>
         </div>
 
-        <div class="glass-card rounded-xl p-6 mb-8">
-          <h2 class="text-lg font-medium mb-4 text-center">
-            <i class="fas fa-clock text-cyan-300 mr-2"></i>HOURLY FORECAST
-          </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
+          <div
+            class="outdoor-card glass-card flex-row items-center justify-between p-4"
+          >
+            <div class="flex items-center">
+              <i class="fas fa-sun text-cyan-300 text-3xl mr-4"></i>
+              <div>
+                <h2 class="text-base font-medium text-gray-400">UV INDEX</h2>
+                <p id="uv-index-desc" class="text-lg font-bold">--</p>
+              </div>
+            </div>
+            <p id="uv-index" class="data-value text-4xl font-bold">--</p>
+          </div>
+
+          <div
+            class="outdoor-card glass-card flex-row items-center justify-between p-4"
+          >
+            <div class="flex items-center">
+              <i class="fas fa-smog text-cyan-300 text-3xl mr-4"></i>
+              <div>
+                <h2 class="text-base font-medium text-gray-400">AIR QUALITY</h2>
+                <p id="air-quality-desc" class="text-lg font-bold">--</p>
+              </div>
+            </div>
+            <p id="air-quality" class="data-value text-4xl font-bold">--</p>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-xl">
+          <div class="p-6 pb-2">
+            <h2 class="text-lg font-medium mb-2 text-center">
+              <i class="fas fa-clock text-cyan-300 mr-2"></i>HOURLY FORECAST
+            </h2>
+          </div>
           <div
             id="forecast-container"
-            class="forecast-container flex overflow-x-auto space-x-4 pb-4 justify-start md:justify-center"
+            class="forecast-container flex overflow-x-auto space-x-4 pb-4 px-6"
           ></div>
         </div>
-        <p class="data-source-text">
-          Source: BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)
-        </p>
+
+        <div class="glass-card rounded-xl p-6 my-8">
+          <h2 class="text-lg font-medium mb-2 text-center">
+            <i class="fas fa-calendar-alt text-cyan-300 mr-2"></i>7-DAY FORECAST
+          </h2>
+          <div id="daily-forecast-container" class="flex flex-col mt-4"></div>
+        </div>
+
+        <p class="data-source-text">Source: Open-Meteo</p>
       </div>
 
       <div class="flex flex-col md:flex-row justify-between items-center mt-8">

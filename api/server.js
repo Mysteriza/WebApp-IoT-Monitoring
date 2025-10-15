@@ -13,31 +13,34 @@ const agent = new https.Agent({ keepAlive: true });
 app.use(express.static("public"));
 app.use(express.json());
 
-// Single call for all pins (V0,V1,V5,V6,V7,V8,V9)
+// Single call for all Blynk pins (V0,V1,V5,V6,V7,V8,V9)
 app.get("/api/blynk", async (_req, res) => {
   try {
     if (!TOKEN) throw new Error("BLYNK_AUTH_TOKEN is not defined");
-
-    // OPTION A: getAll (simple)
-    // const url = `https://${BLYNK_SERVER}/external/api/getAll?token=${TOKEN}`;
-
-    // OPTION B: get multiple (explicit pins)
+    
     const url = `https://${BLYNK_SERVER}/external/api/get?token=${TOKEN}&V0&V1&V5&V6&V7&V8&V9`;
 
     const r = await fetch(url, { agent });
     if (!r.ok) throw new Error(`Blynk get failed: ${r.status}`);
-    const j = await r.json(); // e.g. { "V0": 27.3, "V1": 60.1, ... }
+    const j = await r.json();
 
-    const parse = (x, f=0)=> (x===null||x===undefined||x==="null"||x==="undefined"||Number.isNaN(parseFloat(x))) ? f : parseFloat(x);
+    const parse = (x, f = 0) =>
+      x === null ||
+      x === undefined ||
+      x === "null" ||
+      x === "undefined" ||
+      Number.isNaN(parseFloat(x))
+        ? f
+        : parseFloat(x);
 
     const data = {
-      temperature:      parse(j.V0),
-      humidity:         parse(j.V1),
-      rawGas:           parse(j.V5),
-      compensatedGas:   parse(j.V6),         // IAQ index (bukan ppm)
+      temperature: parse(j.V0),
+      humidity: parse(j.V1),
+      rawGas: parse(j.V5),
+      compensatedGas: parse(j.V6),
       airQualityStatus: j.V7 || "--",
-      pressure:         parse(j.V8, 1013.25),
-      altitude:         parse(j.V9, 0)
+      pressure: parse(j.V8, 1013.25),
+      altitude: parse(j.V9, 0),
     };
 
     if (data.pressure < 800 || data.pressure > 1200) data.pressure = 1013.25;
@@ -45,20 +48,62 @@ app.get("/api/blynk", async (_req, res) => {
 
     res.json(data);
   } catch (e) {
-    res.status(500).json({ error: e.message, details: "Failed to fetch sensor data" });
+    res
+      .status(500)
+      .json({ error: e.message, details: "Failed to fetch sensor data" });
   }
 });
 
-const BMKG_API_URL = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=32.73.14.1002";
-app.get("/api/bmkg", async (_req, res) => {
+// New Open-Meteo endpoint
+app.get("/api/openmeteo", async (_req, res) => {
+  const lat = -6.898;
+  const lon = 107.6349;
+  
+  const weatherURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia/Jakarta`;
+  const airQualityURL = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi&hourly=european_aqi`;
+
   try {
-    const r = await fetch(BMKG_API_URL, { agent });
-    if (!r.ok) throw new Error(`BMKG error: ${r.status}`);
-    res.json(await r.json());
+    const [weatherResponse, airQualityResponse] = await Promise.all([
+      fetch(weatherURL, { agent }),
+      fetch(airQualityURL, { agent }),
+    ]);
+
+    if (!weatherResponse.ok) {
+      throw new Error(`Open-Meteo weather error: ${weatherResponse.status}`);
+    }
+    if (!airQualityResponse.ok) {
+      throw new Error(`Open-Meteo air quality error: ${airQualityResponse.status}`);
+    }
+
+    const weatherData = await weatherResponse.json();
+    const airQualityData = await airQualityResponse.json();
+
+    const combinedData = {
+      location: {
+        name: "Cikutra, Bandung",
+        latitude: weatherData.latitude,
+        longitude: weatherData.longitude,
+        timezone: weatherData.timezone,
+      },
+      current: {
+        ...weatherData.current,
+        ...airQualityData.current
+      },
+      hourly: {
+        ...weatherData.hourly,
+        ...airQualityData.hourly
+      },
+      daily: weatherData.daily
+    };
+
+    res.json(combinedData);
   } catch (e) {
-    res.status(500).json({ error: e.message, details: "Failed to fetch weather data from BMKG" });
+    res
+      .status(500)
+      .json({ error: e.message, details: "Failed to fetch weather data from Open-Meteo" });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
