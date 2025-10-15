@@ -7,7 +7,12 @@
   "headers": [
     {
       "source": "/(.*)",
-      "headers": [{ "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }]
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(self), microphone=(), camera=()"
+        }
+      ]
     }
   ]
 }
