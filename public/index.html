@@ -293,40 +293,53 @@
             </h2>
           </div>
 
-          <div class="outdoor-card glass-card">
-            <i
-              class="fas fa-tachometer-alt text-cyan-300 text-2xl md:text-3xl mb-2"
-            ></i>
-            <div class="flex items-baseline">
-              <p
-                id="pressure"
-                class="data-value text-3xl md:text-4xl font-bold"
-              >
-                --
-              </p>
-              <span class="text-xs md:text-sm text-gray-300 ml-1">hPa</span>
+          <div
+            class="glass-card rounded-xl p-4 flex flex-col justify-center items-center col-span-2"
+          >
+            <div class="w-full flex justify-around items-center">
+              <div class="text-center">
+                <i
+                  class="fas fa-mountain text-cyan-300 text-2xl md:text-3xl mb-2"
+                ></i>
+                <p
+                  id="altitude"
+                  class="data-value text-3xl md:text-4xl font-bold"
+                >
+                  --<span class="text-lg">m</span>
+                </p>
+                <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+                  ALTITUDE
+                </h2>
+              </div>
+              <div class="text-center">
+                <i
+                  class="fas fa-arrow-down text-cyan-300 text-2xl md:text-3xl mb-2"
+                ></i>
+                <p
+                  id="surface-pressure"
+                  class="data-value text-3xl md:text-4xl font-bold"
+                >
+                  --<span class="text-lg">hPa</span>
+                </p>
+                <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+                  SURFACE
+                </h2>
+              </div>
+              <div class="text-center">
+                <i
+                  class="fas fa-water text-cyan-300 text-2xl md:text-3xl mb-2"
+                ></i>
+                <p
+                  id="sea-level-pressure"
+                  class="data-value text-3xl md:text-4xl font-bold"
+                >
+                  --<span class="text-lg">hPa</span>
+                </p>
+                <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+                  SEA-LEVEL
+                </h2>
+              </div>
             </div>
-            <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
-              PRESSURE
-            </h2>
-          </div>
-
-          <div class="outdoor-card glass-card">
-            <i
-              class="fas fa-cloud-showers-heavy text-2xl md:text-3xl text-cyan-300 mb-2"
-            ></i>
-            <div class="flex items-baseline">
-              <p
-                id="precipitation"
-                class="data-value text-3xl md:text-4xl font-bold"
-              >
-                --
-              </p>
-              <span class="text-xs md:text-sm text-gray-300 ml-1">mm</span>
-            </div>
-            <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
-              PRECIPITATION
-            </h2>
           </div>
         </div>
 
@@ -343,7 +356,6 @@
             </div>
             <p id="uv-index" class="data-value text-4xl font-bold">--</p>
           </div>
-
           <div
             class="outdoor-card glass-card flex-row items-center justify-between p-4"
           >

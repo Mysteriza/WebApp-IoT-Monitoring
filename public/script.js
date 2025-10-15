@@ -9,7 +9,7 @@ const elements = {
   temperature: document.getElementById("temperature"),
   humidity: document.getElementById("humidity"),
   indoorPressure: document.querySelector("#indoor-content #pressure"),
-  altitude: document.getElementById("altitude"),
+  indoorAltitude: document.querySelector("#indoor-content #altitude"),
   gasRaw: document.getElementById("gas-raw"),
   gasCompensated: document.getElementById("gas-compensated"),
   airQualityStatus: document.getElementById("air-quality-status"),
@@ -17,7 +17,7 @@ const elements = {
     temp: document.getElementById("temp-bar"),
     humidity: document.getElementById("humidity-bar"),
     pressure: document.querySelector("#indoor-content #pressure-bar"),
-    altitude: document.getElementById("altitude-bar"),
+    altitude: document.querySelector("#indoor-content #altitude-bar"),
     gasRaw: document.getElementById("gas-raw-bar"),
     gasCompensated: document.getElementById("gas-compensated-bar"),
   },
@@ -30,7 +30,9 @@ const elements = {
   outdoorTemperature: document.getElementById("outdoor-temperature"),
   apparentTemperature: document.getElementById("apparent-temperature"),
   outdoorHumidity: document.getElementById("outdoor-humidity"),
-  outdoorPressure: document.querySelector("#outdoor-content #pressure"),
+  surfacePressure: document.getElementById("surface-pressure"),
+  seaLevelPressure: document.getElementById("sea-level-pressure"),
+  outdoorAltitude: document.querySelector("#outdoor-content #altitude"),
   precipitation: document.getElementById("precipitation"),
   uvIndex: document.getElementById("uv-index"),
   uvIndexDesc: document.getElementById("uv-index-desc"),
@@ -55,7 +57,6 @@ let indoorDataInterval;
 let isOutdoorDataLoaded = false;
 
 // --- UTILITY & HELPER FUNCTIONS ---
-
 function formatNumber(value, decimals = 0) {
   const num = parseFloat(value);
   return isNaN(num) ? "--" : num.toFixed(decimals);
@@ -73,19 +74,14 @@ function showToast(message, isError = false) {
 
 function updateClock() {
   const now = new Date();
-  elements.time.textContent = now.toLocaleTimeString("en-US", {
-    hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit",
-  });
-  elements.date.textContent = now.toLocaleDateString("en-US", {
-    day: "numeric", month: "short", year: "numeric",
-  });
+  elements.time.textContent = now.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  elements.date.textContent = now.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function getWeatherInfo(code, dateStr) {
   const date = dateStr ? new Date(dateStr) : new Date();
   const hour = date.getHours();
   const isDay = hour >= 6 && hour < 18;
-
   const descriptions = {
     0: "Clear", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast",
     45: "Fog", 48: "Rime Fog", 51: "Light Drizzle", 53: "Drizzle",
@@ -106,14 +102,8 @@ function getWeatherInfo(code, dateStr) {
     81: "fa-cloud-sun-rain", 82: "fa-poo-storm", 85: "fa-snowflake", 86: "fa-snowflake",
     95: "fa-bolt", 96: "fa-bolt", 99: "fa-bolt",
   };
-  const nightIcons = {
-    0: "fa-moon", 1: "fa-cloud-moon", 80: "fa-cloud-moon-rain", 81: "fa-cloud-moon-rain"
-  }
-
-  return {
-    description: descriptions[code] || "Unknown",
-    icon: isDay ? icons[code] : (nightIcons[code] || icons[code]),
-  };
+  const nightIcons = { 0: "fa-moon", 1: "fa-cloud-moon", 80: "fa-cloud-moon-rain", 81: "fa-cloud-moon-rain" };
+  return { description: descriptions[code] || "Unknown", icon: isDay ? icons[code] : (nightIcons[code] || icons[code]) };
 }
 
 function getWindDirection(degrees) {
@@ -155,8 +145,8 @@ function updateIndoorStyles(data) {
     const pressureRange = 1100 - 500;
     elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
     elements.indoorPressure.className = `data-value text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
-    elements.bars.altitude.style.width = `${Math.min(Math.max(data.altitude / 2000 * 100, 0), 100)}%`;
-    elements.altitude.className = `data-value text-4xl font-bold ${getStyleClass(data.altitude, [100, 500], ['altitude-low', 'altitude-medium', 'altitude-high'])}`;
+    elements.bars.altitude.style.width = `${Math.min(Math.max(data.indoorAltitude / 2000 * 100, 0), 100)}%`;
+    elements.indoorAltitude.className = `data-value text-4xl font-bold ${getStyleClass(data.indoorAltitude, [100, 500], ['altitude-low', 'altitude-medium', 'altitude-high'])}`;
     elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
     elements.bars.gasCompensated.style.width = `${Math.min(Math.max((data.compensatedGas / 500) * 100, 0), 100)}%`;
     const statusClasses = { "Very Good": "status-excellent", Good: "status-good", Fair: "status-fair", Poor: "status-poor", "Very Poor": "status-critical" };
@@ -176,7 +166,7 @@ async function fetchIndoorData() {
         elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
         elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
         elements.indoorPressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
-        elements.altitude.textContent = `${formatNumber(data.altitude)} m`;
+        elements.indoorAltitude.textContent = `${formatNumber(data.altitude)} m`;
         elements.gasRaw.textContent = formatNumber(data.rawGas);
         elements.gasCompensated.textContent = formatNumber(data.compensatedGas);
         elements.airQualityStatus.textContent = data.airQualityStatus || "--";
@@ -222,8 +212,9 @@ function updateOutdoorUI(data) {
     elements.outdoorTemperature.textContent = `${formatNumber(current.temperature_2m, 0)}°`;
     elements.apparentTemperature.textContent = `${formatNumber(current.apparent_temperature, 0)}°`;
     elements.outdoorHumidity.textContent = `${formatNumber(current.relative_humidity_2m, 0)}%`;
-    elements.outdoorPressure.textContent = `${formatNumber(current.surface_pressure, 0)}`;
-    elements.precipitation.textContent = `${formatNumber(current.precipitation, 1)}`;
+    elements.surfacePressure.innerHTML = `${formatNumber(current.surface_pressure, 0)}<span class="text-lg">hPa</span>`;
+    elements.seaLevelPressure.innerHTML = `${formatNumber(current.pressure_msl, 0)}<span class="text-lg">hPa</span>`;
+    elements.outdoorAltitude.innerHTML = `${formatNumber(location.elevation, 0)}<span class="text-lg">m</span>`;
     elements.windSpeed.textContent = formatNumber(current.wind_speed_10m, 1);
     elements.windDirection.textContent = getWindDirection(current.wind_direction_10m);
 
@@ -246,7 +237,7 @@ function updateOutdoorUI(data) {
 function updateHourlyForecastUI(hourly) {
     elements.forecastContainer.innerHTML = '';
     const now = new Date();
-    const currentTimeIndex = hourly.time.findIndex(time => new Date(time) > now);
+    const currentTimeIndex = hourly.time.findIndex(time => new Date(time) >= now);
     if (currentTimeIndex === -1) {
         elements.forecastContainer.innerHTML = `<p class="text-gray-400 w-full text-center">No future forecast data.</p>`;
         return;
@@ -256,11 +247,12 @@ function updateHourlyForecastUI(hourly) {
         const i = currentTimeIndex + index;
         const weatherInfo = getWeatherInfo(hourly.weather_code[i], time);
         const forecastCard = `
-            <div class="flex-shrink-0 text-center p-3 rounded-lg bg-white/5 w-24">
+            <div class="flex-shrink-0 text-center p-3 rounded-lg bg-white/5 w-28">
                 <p class="font-bold text-base">${new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', hour12: false })}:00</p>
                 <i class="fas ${weatherInfo.icon} text-3xl text-cyan-300 my-2"></i>
                 <p class="font-bold text-lg">${formatNumber(hourly.temperature_2m[i], 0)}°C</p>
-                <div class="flex items-center justify-center text-cyan-300 mt-1">
+                <p class="text-xs text-gray-300 -mt-1 mb-1">${weatherInfo.description}</p>
+                <div class="flex items-center justify-center text-cyan-300">
                   <i class="fas fa-umbrella text-xs mr-1"></i>
                   <span class="text-xs font-medium">${formatNumber(hourly.precipitation_probability[i], 0)}%</span>
                 </div>
@@ -272,28 +264,32 @@ function updateHourlyForecastUI(hourly) {
 
 function updateDailyForecastUI(daily) {
     elements.dailyForecastContainer.innerHTML = `
-        <div class="hidden md:grid grid-cols-5 items-center text-gray-400 text-sm font-bold border-b border-white/10 pb-2 mb-2">
-            <span class="col-span-2">DAY</span>
-            <span class="text-center"></span>
-            <span class="text-center">RAIN</span>
-            <span class="text-right">TEMP</span>
-        </div>
-    `;
+      <div class="hidden md:grid grid-cols-5 items-center text-gray-400 text-sm font-bold border-b border-white/10 pb-2 mb-2">
+          <span class="col-span-2">DAY</span>
+          <span class="text-center">FORECAST</span>
+          <span class="text-center">RAIN</span>
+          <span class="text-right">TEMP</span>
+      </div>`;
     daily.time.forEach((dateStr, i) => {
         const date = new Date(dateStr);
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
         const dayName = i === 0 ? "Today" : date.toLocaleDateString('en-US', { weekday: 'short' });
         const weatherInfo = getWeatherInfo(daily.weather_code[i], dateStr);
         const dailyItem = `
             <div class="grid grid-cols-5 items-center py-2 border-b border-white/5 last:border-none text-sm md:text-base">
-                <span class="font-bold col-span-2">${dayName}</span>
-                <div class="flex items-center justify-center col-span-1">
+                <div class="col-span-2 flex flex-col">
+                  <span class="font-bold">${dayName}</span>
+                  <span class="text-xs text-gray-400 md:hidden">${weatherInfo.description}</span>
+                </div>
+                <div class="hidden md:flex items-center justify-center col-span-1">
                     <i class="fas ${weatherInfo.icon} text-xl text-cyan-300 w-8 text-center"></i>
+                    <span class="ml-2 text-gray-300">${weatherInfo.description}</span>
                 </div>
                 <div class="flex items-center justify-center text-sm col-span-1">
-                     <i class="fas fa-cloud-rain text-cyan-300 text-xs mr-1"></i>
-                     <span>${formatNumber(daily.precipitation_sum[i], 1)} mm</span>
+                     <i class="fas fa-umbrella text-cyan-300 text-xs mr-1"></i>
+                     <span>${formatNumber(daily.precipitation_probability_max[i], 0)}%</span>
                 </div>
-                <p class="col-span-1 text-right font-medium">
+                <p class="col-span-2 md:col-span-1 text-right font-medium">
                     <span class="font-bold">${formatNumber(daily.temperature_2m_max[i], 0)}°</span>
                     <span class="text-gray-400">/${formatNumber(daily.temperature_2m_min[i], 0)}°</span>
                 </p>
@@ -311,14 +307,15 @@ function resetOutdoorUI() {
     elements.outdoorTemperature.textContent = "--°";
     elements.apparentTemperature.textContent = "--°";
     elements.outdoorHumidity.textContent = "--%";
-    elements.outdoorPressure.textContent = "--";
-    elements.precipitation.textContent = "--";
+    elements.surfacePressure.innerHTML = "--<span class='text-lg'>hPa</span>";
+    elements.seaLevelPressure.innerHTML = "--<span class='text-lg'>hPa</span>";
+    elements.outdoorAltitude.innerHTML = "--<span class='text-lg'>m</span>";
+    elements.windSpeed.textContent = "--";
+    elements.windDirection.textContent = "--";
     elements.uvIndex.textContent = "--";
     elements.uvIndexDesc.textContent = "--";
     elements.airQuality.textContent = "--";
     elements.airQualityDesc.textContent = "--";
-    elements.windSpeed.textContent = "--";
-    elements.windDirection.textContent = "--";
     elements.forecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Failed to load forecast.</p>`;
     elements.dailyForecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Failed to load forecast.</p>`;
 }

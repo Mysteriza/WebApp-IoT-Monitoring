@@ -382,3 +382,9 @@ body {
     padding-bottom: 0.5rem;
   }
 }
+
+/* Hardware Acceleration fix for performance */
+.glass-card,
+.orb {
+  transform: translateZ(0);
+}
