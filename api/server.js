@@ -33,11 +33,11 @@ app.get("/api/blynk", async (_req, res) => {
   }
 });
 
-app.get("/api/openmeteo", async (_req, res) => {
-  const lat = -6.898;
-  const lon = 107.6349;
+app.get("/api/openmeteo", async (req, res) => {
+  const lat = req.query.lat || -6.898;
+  const lon = req.query.lon || 107.6349;
   
-  const weatherURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,pressure_msl,wind_speed_10m,wind_direction_10m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=Asia/Jakarta`;
+  const weatherURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,pressure_msl,wind_speed_10m,wind_direction_10m,uv_index&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=auto`;
   const airQualityURL = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi`;
   const elevationURL = `https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`;
 
@@ -58,7 +58,6 @@ app.get("/api/openmeteo", async (_req, res) => {
 
     const combinedData = {
       location: {
-        name: "Cikutra, Bandung",
         latitude: weatherData.latitude,
         longitude: weatherData.longitude,
         timezone: weatherData.timezone,
@@ -73,6 +72,30 @@ app.get("/api/openmeteo", async (_req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message, details: "Failed to fetch weather data from Open-Meteo" });
   }
+});
+
+// Endpoint for reverse geocoding
+app.get("/api/geocode", async (req, res) => {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) {
+        return res.status(400).json({ error: "Latitude and Longitude are required" });
+    }
+    // PERBAIKAN: Menggunakan API reverse geocoding dari bigdatacloud.com sebagai alternatif yang andal
+    const geocodeURL = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+    try {
+        const response = await fetch(geocodeURL); 
+        if (!response.ok) throw new Error(`Geocoding error: ${response.status}`);
+        const data = await response.json();
+        
+        // Membentuk nama lokasi dari data yang didapat
+        const locationName = data.locality || data.city || "Unknown Location";
+        const adminName = data.principalSubdivision || data.countryName || "";
+        
+        res.json({ name: `${locationName}, ${adminName}` });
+
+    } catch (e) {
+        res.status(500).json({ error: e.message, details: "Failed to fetch location name" });
+    }
 });
 
 const PORT = process.env.PORT || 3000;

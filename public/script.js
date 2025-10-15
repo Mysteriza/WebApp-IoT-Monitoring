@@ -54,7 +54,7 @@ const elements = {
 
 let activeTab = "indoor";
 let indoorDataInterval;
-let isOutdoorDataLoaded = false;
+let lastCoords = null; // Start with null to always ask for location first
 
 // --- UTILITY & HELPER FUNCTIONS ---
 function formatNumber(value, decimals = 0) {
@@ -130,7 +130,28 @@ function getAQIInfo(aqi) {
   return { text: "Extremely Poor", className: "text-purple-400" };
 }
 
-// --- INDOOR UI & DATA ---
+async function fetchIndoorData() {
+    try {
+        const startTime = performance.now();
+        const response = await fetch("/api/blynk");
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
+        elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
+        elements.indoorPressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
+        elements.indoorAltitude.textContent = `${formatNumber(data.altitude)} m`;
+        elements.gasRaw.textContent = formatNumber(data.rawGas);
+        elements.gasCompensated.textContent = formatNumber(data.compensatedGas);
+        elements.airQualityStatus.textContent = data.airQualityStatus || "--";
+        updateIndoorStyles(data);
+        elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+        showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
+    } catch (error) {
+        console.error("Fetch indoor error:", error);
+        showToast("Failed to update indoor data", true);
+    }
+}
+
 function updateIndoorStyles(data) {
     const getStyleClass = (value, thresholds, classes) => {
         for (let i = 0; i < thresholds.length; i++) {
@@ -157,42 +178,60 @@ function updateIndoorStyles(data) {
     if (elements.airQualityStatus) elements.airQualityStatus.className = `text-2xl font-bold mt-2 ${textClasses[data.airQualityStatus] || "text-cyan-300"}`;
 }
 
-async function fetchIndoorData() {
-    try {
-        const startTime = performance.now();
-        const response = await fetch("/api/blynk");
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
-        elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
-        elements.indoorPressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
-        elements.indoorAltitude.textContent = `${formatNumber(data.altitude)} m`;
-        elements.gasRaw.textContent = formatNumber(data.rawGas);
-        elements.gasCompensated.textContent = formatNumber(data.compensatedGas);
-        elements.airQualityStatus.textContent = data.airQualityStatus || "--";
-        updateIndoorStyles(data);
-        elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
-        showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
-    } catch (error) {
-        console.error("Fetch indoor error:", error);
-        showToast("Failed to update indoor data", true);
-    }
+// --- OUTDOOR UI & DATA (WITH GEOLOCATION) ---
+function getUserLocation() {
+    return new Promise((resolve) => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    showToast("Location found!", false);
+                    resolve({ lat: position.coords.latitude, lon: position.coords.longitude });
+                },
+                (error) => {
+                    console.error("Geolocation error:", error.message);
+                    showToast("Location access denied. Using default.", true);
+                    resolve(null);
+                },
+                { timeout: 8000 }
+            );
+        } else {
+            showToast("Geolocation not supported. Using default.", true);
+            resolve(null);
+        }
+    });
 }
 
-// --- OUTDOOR UI & DATA ---
-async function fetchOutdoorData(forceRefresh = false) {
-    if (isOutdoorDataLoaded && !forceRefresh) {
-        showToast("Outdoor data already loaded.");
-        return;
-    }
+async function fetchAndDisplayWeatherData(coords, locationName) {
     try {
         const startTime = performance.now();
-        const response = await fetch("/api/openmeteo");
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        updateOutdoorUI(data);
+        
+        let url = '/api/openmeteo';
+        if (coords) {
+            url += `?lat=${coords.lat}&lon=${coords.lon}`;
+        }
+
+        const weatherResponse = await fetch(url);
+        if (!weatherResponse.ok) throw new Error(`HTTP error! status: ${weatherResponse.status}`);
+        
+        const data = await weatherResponse.json();
+        
+        // If we don't have a location name yet, fetch it.
+        if (!locationName && coords) {
+            try {
+                const geocodeResponse = await fetch(`/api/geocode?lat=${coords.lat}&lon=${coords.lon}`);
+                if (geocodeResponse.ok) {
+                    const geocode = await geocodeResponse.json();
+                    locationName = geocode.name;
+                }
+            } catch (geocodeError) {
+                console.error("Geocode fetch error:", geocodeError);
+                // Continue without a name, it will use the default.
+            }
+        }
+
+        updateOutdoorUI(data, locationName);
+        
         elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
-        isOutdoorDataLoaded = true;
         showToast(`Outdoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
     } catch (error) {
         console.error("Fetch outdoor error:", error);
@@ -201,9 +240,32 @@ async function fetchOutdoorData(forceRefresh = false) {
     }
 }
 
-function updateOutdoorUI(data) {
+async function fetchOutdoorData(forceRefresh = false) {
+    if (forceRefresh) {
+        lastCoords = null; 
+    }
+
+    if (lastCoords) {
+        // If we already have coordinates, just fetch the weather.
+        fetchAndDisplayWeatherData(lastCoords);
+        return;
+    }
+
+    // Try to get user location
+    const userCoords = await getUserLocation();
+    if (userCoords) {
+        lastCoords = userCoords;
+        fetchAndDisplayWeatherData(userCoords);
+    } else {
+        // PERBAIKAN: Jika gagal, langsung panggil fetch dengan koordinat default (null)
+        lastCoords = { lat: -6.898, lon: 107.6349 }; // Set for future refreshes
+        fetchAndDisplayWeatherData(null, "Cikutra, Bandung");
+    }
+}
+
+function updateOutdoorUI(data, locationName) {
     const { location, current, hourly, daily } = data;
-    elements.locationName.textContent = location.name;
+    elements.locationName.textContent = locationName || "Cikutra, Bandung";
     elements.locationDetails.textContent = `Timezone: ${location.timezone}`;
     
     const weatherInfo = getWeatherInfo(current.weather_code, current.time);
@@ -300,10 +362,10 @@ function updateDailyForecastUI(daily) {
 }
 
 function resetOutdoorUI() {
-    elements.locationName.textContent = "Loading Location...";
+    elements.locationName.textContent = "Getting Location...";
     elements.locationDetails.textContent = "";
     elements.weatherDescription.textContent = "--";
-    elements.weatherIconContainer.innerHTML = "";
+    elements.weatherIconContainer.innerHTML = `<i class="fas fa-spinner fa-spin text-6xl text-cyan-300"></i>`;
     elements.outdoorTemperature.textContent = "--°";
     elements.apparentTemperature.textContent = "--°";
     elements.outdoorHumidity.textContent = "--%";
@@ -316,11 +378,10 @@ function resetOutdoorUI() {
     elements.uvIndexDesc.textContent = "--";
     elements.airQuality.textContent = "--";
     elements.airQualityDesc.textContent = "--";
-    elements.forecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Failed to load forecast.</p>`;
-    elements.dailyForecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Failed to load forecast.</p>`;
+    elements.forecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Loading forecast...</p>`;
+    elements.dailyForecastContainer.innerHTML = `<p class="text-gray-400 text-center w-full">Loading forecast...</p>`;
 }
 
-// --- MAIN LOGIC & INITIALIZATION ---
 function switchTab(tab) {
     activeTab = tab;
     clearInterval(indoorDataInterval);
@@ -333,7 +394,8 @@ function switchTab(tab) {
         fetchIndoorData();
         indoorDataInterval = setInterval(fetchIndoorData, 30000);
     } else {
-        fetchOutdoorData();
+        resetOutdoorUI();
+        fetchOutdoorData(true);
     }
 }
 
