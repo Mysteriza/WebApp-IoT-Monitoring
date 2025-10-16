@@ -48,20 +48,22 @@ const elements = {
 let activeTab = "indoor";
 let indoorDataInterval;
 const defaultCoords = { lat: -6.898, lon: 107.6349, name: "Cikutra, Bandung" };
+let toastTimeout;
 
 function formatNumber(value, decimals = 0) {
   const num = parseFloat(value);
   return isNaN(num) ? "--" : num.toFixed(decimals);
 }
 
-function showToast(message, isError = false) {
+function showToast(message, isError = false, duration = 3000) {
+  clearTimeout(toastTimeout);
   elements.toastText.textContent = message;
   const toastClass = isError
     ? "bg-red-900 text-white border border-red-400"
     : "bg-gray-900 text-white border border-cyan-400";
   elements.toast.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 max-w-xs text-center transition-all duration-300 ${toastClass}`;
   elements.toast.classList.remove("hidden");
-  setTimeout(() => elements.toast.classList.add("hidden"), 3000);
+  toastTimeout = setTimeout(() => elements.toast.classList.add("hidden"), duration);
 }
 
 function updateClock() {
@@ -140,7 +142,7 @@ async function fetchIndoorData() {
         showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
     } catch (error) {
         console.error("Fetch indoor error:", error);
-        showToast("Failed to update indoor data", true);
+        showToast("Failed to update indoor data", true, 5000);
     }
 }
 
@@ -186,43 +188,28 @@ function cacheLocation(coords, name) {
 function getUserLocation() {
     return new Promise((resolve) => {
         if (!("geolocation" in navigator)) {
-            showToast("Geolocation not supported. Using default.", true);
-            resolve(null);
+            resolve({ error: "Geolocation not supported." });
             return;
         }
 
         const handleSuccess = (position) => {
-            showToast("Location found!", false);
-            resolve({ lat: position.coords.latitude, lon: position.coords.longitude });
+            resolve({ coords: { lat: position.coords.latitude, lon: position.coords.longitude } });
         };
 
-        const handleError = (error, isHighAccuracy) => {
-            console.error(`Geolocation Error (High Accuracy: ${isHighAccuracy}):`, error.code, error.message);
-            if (isHighAccuracy) {
-                showToast("High accuracy failed, trying low accuracy...", false);
-                navigator.geolocation.getCurrentPosition(
-                    handleSuccess,
-                    (lowAccError) => handleError(lowAccError, false),
-                    { timeout: 10000, enableHighAccuracy: false }
-                );
-                return;
-            }
-            let errorMessage = "Could not determine location. Using default.";
-            if (error.code === 1) errorMessage = "Location permission was denied. Using default.";
-            showToast(errorMessage, true);
-            resolve(null);
+        const handleError = (error) => {
+            console.error("Geolocation Error:", error.code, error.message);
+            resolve({ error });
         };
         
-        navigator.geolocation.getCurrentPosition(
-            handleSuccess,
-            (highAccError) => handleError(highAccError, true),
-            { timeout: 10000, enableHighAccuracy: true }
-        );
+        navigator.geolocation.getCurrentPosition(handleSuccess, handleError, {
+            timeout: 15000,
+            enableHighAccuracy: true,
+        });
     });
 }
 
 
-async function fetchAndDisplayWeatherData(coords, locationName) {
+async function fetchAndDisplayWeatherData(coords, locationName, isFallback = false) {
     try {
         const startTime = performance.now();
         const weatherUrl = `/api/openmeteo?lat=${coords.lat}&lon=${coords.lon}`;
@@ -248,10 +235,13 @@ async function fetchAndDisplayWeatherData(coords, locationName) {
 
         updateOutdoorUI(data, locationName || defaultCoords.name);
         elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
-        showToast(`Outdoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
+        
+        if (!isFallback) {
+            showToast(`Outdoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
+        }
     } catch (error) {
         console.error("Fetch outdoor error:", error);
-        showToast("Failed to update outdoor data", true);
+        showToast("Failed to update outdoor data", true, 5000);
         resetOutdoorUI();
     }
 }
@@ -265,12 +255,28 @@ async function fetchOutdoorData(forceRefresh = false) {
         fetchAndDisplayWeatherData(cachedLocation, cachedLocation.name);
         return;
     }
-    const userCoords = await getUserLocation();
-    if (userCoords) {
-        fetchAndDisplayWeatherData(userCoords);
+
+    showToast("Getting your location...", false, 15000);
+    const locationResult = await getUserLocation();
+
+    if (locationResult.coords) {
+        showToast("Location found!", false);
+        fetchAndDisplayWeatherData(locationResult.coords);
     } else {
-        cacheLocation(defaultCoords, defaultCoords.name);
-        fetchAndDisplayWeatherData(defaultCoords, defaultCoords.name);
+        let errorMessage = "Could not get location. Using default.";
+        if (locationResult.error.code === 1) {
+            errorMessage = "Location permission denied. Using default.";
+        } else if (locationResult.error.code === 2) {
+            errorMessage = "Location unavailable. Check GPS/network.";
+        } else if (locationResult.error.code === 3) {
+            errorMessage = "Location request timed out. Using default.";
+        }
+        showToast(errorMessage, true, 5000);
+        
+        setTimeout(() => {
+            cacheLocation(defaultCoords, defaultCoords.name);
+            fetchAndDisplayWeatherData(defaultCoords, defaultCoords.name, true);
+        }, 3000);
     }
 }
 
@@ -291,8 +297,6 @@ function updateOutdoorUI(data, locationName) {
     elements.outdoorAltitude.innerHTML = `${formatNumber(location.elevation, 1)}<span class="text-lg">m</span>`;
     elements.windSpeed.textContent = formatNumber(current.wind_speed_10m, 1);
     elements.windDirection.textContent = getWindDirection(current.wind_direction_10m);
-    
-    // PERBAIKAN: Menambahkan baris yang hilang untuk presipitasi
     elements.precipitation.textContent = formatNumber(current.precipitation, 1);
 
     const uvInfo = getUVIndexInfo(current.uv_index);
