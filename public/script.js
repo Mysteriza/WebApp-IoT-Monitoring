@@ -234,17 +234,20 @@ function getUserLocation() {
 async function fetchAndDisplayWeatherData(coords, locationName) {
     try {
         const startTime = performance.now();
-        const url = `/api/openmeteo?lat=${coords.lat}&lon=${coords.lon}`;
-        const weatherResponse = await fetch(url);
-        if (!weatherResponse.ok) throw new Error(`HTTP error! status: ${weatherResponse.status}`);
+        const weatherUrl = `/api/openmeteo?lat=${coords.lat}&lon=${coords.lon}`;
+
+        const weatherResponse = await fetch(weatherUrl);
+        if (!weatherResponse.ok) throw new Error(`Weather API error! status: ${weatherResponse.status}`);
         const data = await weatherResponse.json();
 
+        // PERBAIKAN: Panggil API geocode dari browser
         if (!locationName && coords) {
+            const geocodeUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.lat}&longitude=${coords.lon}&localityLanguage=en`;
             try {
-                const geocodeResponse = await fetch(`/api/geocode?lat=${coords.lat}&lon=${coords.lon}`);
+                const geocodeResponse = await fetch(geocodeUrl);
                 if (geocodeResponse.ok) {
                     const geocode = await geocodeResponse.json();
-                    locationName = geocode.name;
+                    locationName = `${geocode.locality}, ${geocode.principalSubdivision}`;
                     cacheLocation(coords, locationName);
                 }
             } catch (geocodeError) {
@@ -322,7 +325,6 @@ function updateHourlyForecastUI(hourly) {
         elements.forecastContainer.innerHTML = `<p class="text-gray-400 w-full text-center">No future forecast data.</p>`;
         return;
     }
-    // PERBAIKAN: Mengambil 24 jam ke depan
     const next24Hours = hourly.time.slice(currentTimeIndex, currentTimeIndex + 24);
     next24Hours.forEach((time, index) => {
         const i = currentTimeIndex + index;

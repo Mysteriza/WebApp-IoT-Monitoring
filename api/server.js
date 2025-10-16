@@ -74,28 +74,7 @@ app.get("/api/openmeteo", async (req, res) => {
   }
 });
 
-// Endpoint for reverse geocoding
-app.get("/api/geocode", async (req, res) => {
-    const { lat, lon } = req.query;
-    if (!lat || !lon) {
-        return res.status(400).json({ error: "Latitude and Longitude are required" });
-    }
-    // PERBAIKAN: Menggunakan URL reverse geocoding yang benar dari Open-Meteo
-    const geocodeURL = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&format=json`;
-    try {
-        const response = await fetch(geocodeURL); 
-        if (!response.ok) throw new Error(`Geocoding error: ${response.status}`);
-        const data = await response.json();
-        
-        const locationName = data.name || "Unknown Location";
-        const adminName = data.admin1 || data.country || "";
-        
-        res.json({ name: `${locationName}, ${adminName}` });
-
-    } catch (e) {
-        res.status(500).json({ error: e.message, details: "Failed to fetch location name" });
-    }
-});
+// Endpoint /api/geocode telah dihapus
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
