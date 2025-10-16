@@ -226,7 +226,6 @@ async function fetchAndDisplayWeatherData(coords, locationName) {
     try {
         const startTime = performance.now();
         const weatherUrl = `/api/openmeteo?lat=${coords.lat}&lon=${coords.lon}`;
-
         const weatherResponse = await fetch(weatherUrl);
         if (!weatherResponse.ok) throw new Error(`Weather API error! status: ${weatherResponse.status}`);
         const data = await weatherResponse.json();
@@ -292,6 +291,9 @@ function updateOutdoorUI(data, locationName) {
     elements.outdoorAltitude.innerHTML = `${formatNumber(location.elevation, 1)}<span class="text-lg">m</span>`;
     elements.windSpeed.textContent = formatNumber(current.wind_speed_10m, 1);
     elements.windDirection.textContent = getWindDirection(current.wind_direction_10m);
+    
+    // PERBAIKAN: Menambahkan baris yang hilang untuk presipitasi
+    elements.precipitation.textContent = formatNumber(current.precipitation, 1);
 
     const uvInfo = getUVIndexInfo(current.uv_index);
     elements.uvIndex.textContent = formatNumber(current.uv_index, 1);
@@ -385,6 +387,7 @@ function resetOutdoorUI() {
     elements.surfacePressure.innerHTML = "--<span class='text-lg'>hPa</span>";
     elements.seaLevelPressure.innerHTML = "--<span class='text-lg'>hPa</span>";
     elements.outdoorAltitude.innerHTML = "--<span class='text-lg'>m</span>";
+    elements.precipitation.textContent = "--";
     elements.windSpeed.textContent = "--";
     elements.windDirection.textContent = "--";
     elements.uvIndex.textContent = "--";
