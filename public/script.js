@@ -32,7 +32,8 @@ const elements = {
   outdoorHumidity: document.getElementById("outdoor-humidity"),
   surfacePressure: document.getElementById("surface-pressure"),
   seaLevelPressure: document.getElementById("sea-level-pressure"),
-  outdoorAltitude: document.getElementById("altitude"),
+  // PERBAIKAN: Gunakan selector yang spesifik untuk tab outdoor
+  outdoorAltitude: document.querySelector("#outdoor-content #altitude"),
   precipitation: document.getElementById("precipitation"),
   uvIndex: document.getElementById("uv-index"),
   uvIndexDesc: document.getElementById("uv-index-desc"),
@@ -192,32 +193,50 @@ function cacheLocation(coords, name) {
     sessionStorage.setItem('userLocation', JSON.stringify(locationData));
 }
 
+// PERBAIKAN: Fungsi ini sekarang akan mencoba dua kali (presisi tinggi, lalu rendah)
 function getUserLocation() {
     return new Promise((resolve) => {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    showToast("Location found!", false);
-                    resolve({ lat: position.coords.latitude, lon: position.coords.longitude });
-                },
-                (error) => {
-                    console.error("Geolocation error:", error.message);
-                    let errorMessage = "Location access denied. Using default.";
-                    if (error.code === error.TIMEOUT) {
-                        errorMessage = "Location request timed out. Using default.";
-                    }
-                    showToast(errorMessage, true);
-                    resolve(null);
-                },
-                // PERBAIKAN: Waktu tunggu diperpanjang menjadi 15 detik
-                { timeout: 15000, enableHighAccuracy: true } 
-            );
-        } else {
+        if (!("geolocation" in navigator)) {
             showToast("Geolocation not supported. Using default.", true);
             resolve(null);
+            return;
         }
+
+        const handleSuccess = (position) => {
+            showToast("Location found!", false);
+            resolve({ lat: position.coords.latitude, lon: position.coords.longitude });
+        };
+
+        const handleError = (error, isHighAccuracy) => {
+            console.error(`Geolocation Error (High Accuracy: ${isHighAccuracy}):`, error.code, error.message);
+
+            // Jika percobaan akurasi tinggi gagal, coba lagi dengan akurasi rendah
+            if (isHighAccuracy) {
+                showToast("High accuracy failed, trying low accuracy...", false);
+                navigator.geolocation.getCurrentPosition(
+                    handleSuccess,
+                    (lowAccError) => handleError(lowAccError, false),
+                    { timeout: 10000, enableHighAccuracy: false }
+                );
+                return;
+            }
+
+            // Jika keduanya gagal, tampilkan pesan dan fallback
+            let errorMessage = "Could not determine location. Using default.";
+            if (error.code === 1) errorMessage = "Location permission was denied. Using default.";
+            showToast(errorMessage, true);
+            resolve(null);
+        };
+
+        // Mulai dengan percobaan pertama (akurasi tinggi)
+        navigator.geolocation.getCurrentPosition(
+            handleSuccess,
+            (highAccError) => handleError(highAccError, true),
+            { timeout: 10000, enableHighAccuracy: true }
+        );
     });
 }
+
 
 async function fetchAndDisplayWeatherData(coords, locationName) {
     try {
@@ -229,14 +248,13 @@ async function fetchAndDisplayWeatherData(coords, locationName) {
         
         const data = await weatherResponse.json();
 
-        // If we don't have a location name from cache, fetch it.
-        if (!locationName) {
+        if (!locationName && coords) {
             try {
                 const geocodeResponse = await fetch(`/api/geocode?lat=${coords.lat}&lon=${coords.lon}`);
                 if (geocodeResponse.ok) {
                     const geocode = await geocodeResponse.json();
                     locationName = geocode.name;
-                    cacheLocation(coords, locationName); // Cache the location with its name
+                    cacheLocation(coords, locationName);
                 }
             } catch (geocodeError) {
                 console.error("Geocode fetch error:", geocodeError);
@@ -268,10 +286,8 @@ async function fetchOutdoorData(forceRefresh = false) {
 
     const userCoords = await getUserLocation();
     if (userCoords) {
-        // Fetch weather and location name for the first time
         fetchAndDisplayWeatherData(userCoords);
     } else {
-        // Fallback to default if location fails
         cacheLocation(defaultCoords, defaultCoords.name);
         fetchAndDisplayWeatherData(defaultCoords, defaultCoords.name);
     }
@@ -409,12 +425,12 @@ function switchTab(tab) {
         indoorDataInterval = setInterval(fetchIndoorData, 30000);
     } else {
         resetOutdoorUI();
-        fetchOutdoorData(false); // Do not force refresh on simple tab switch
+        fetchOutdoorData(false);
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    sessionStorage.removeItem('userLocation'); // Clear cache on initial load/refresh
+    sessionStorage.removeItem('userLocation');
     switchTab("indoor");
     setInterval(updateClock, 1000);
     updateClock();
