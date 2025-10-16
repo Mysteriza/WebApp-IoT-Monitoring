@@ -32,7 +32,7 @@ const elements = {
   outdoorHumidity: document.getElementById("outdoor-humidity"),
   surfacePressure: document.getElementById("surface-pressure"),
   seaLevelPressure: document.getElementById("sea-level-pressure"),
-  outdoorAltitude: document.querySelector("#outdoor-content #altitude"),
+  outdoorAltitude: document.getElementById("altitude"),
   precipitation: document.getElementById("precipitation"),
   uvIndex: document.getElementById("uv-index"),
   uvIndexDesc: document.getElementById("uv-index-desc"),
@@ -54,7 +54,7 @@ const elements = {
 
 let activeTab = "indoor";
 let indoorDataInterval;
-let lastCoords = null; // Start with null to always ask for location first
+const defaultCoords = { lat: -6.898, lon: 107.6349, name: "Cikutra, Bandung" };
 
 // --- UTILITY & HELPER FUNCTIONS ---
 function formatNumber(value, decimals = 0) {
@@ -178,7 +178,20 @@ function updateIndoorStyles(data) {
     if (elements.airQualityStatus) elements.airQualityStatus.className = `text-2xl font-bold mt-2 ${textClasses[data.airQualityStatus] || "text-cyan-300"}`;
 }
 
-// --- OUTDOOR UI & DATA (WITH GEOLOCATION) ---
+// --- OUTDOOR UI & DATA (WITH GEOLOCATION & CACHING) ---
+function getCachedLocation() {
+    const cached = sessionStorage.getItem('userLocation');
+    if (cached) {
+        return JSON.parse(cached);
+    }
+    return null;
+}
+
+function cacheLocation(coords, name) {
+    const locationData = { ...coords, name };
+    sessionStorage.setItem('userLocation', JSON.stringify(locationData));
+}
+
 function getUserLocation() {
     return new Promise((resolve) => {
         if ("geolocation" in navigator) {
@@ -189,10 +202,15 @@ function getUserLocation() {
                 },
                 (error) => {
                     console.error("Geolocation error:", error.message);
-                    showToast("Location access denied. Using default.", true);
+                    let errorMessage = "Location access denied. Using default.";
+                    if (error.code === error.TIMEOUT) {
+                        errorMessage = "Location request timed out. Using default.";
+                    }
+                    showToast(errorMessage, true);
                     resolve(null);
                 },
-                { timeout: 8000 }
+                // PERBAIKAN: Waktu tunggu diperpanjang menjadi 15 detik
+                { timeout: 15000, enableHighAccuracy: true } 
             );
         } else {
             showToast("Geolocation not supported. Using default.", true);
@@ -204,32 +222,28 @@ function getUserLocation() {
 async function fetchAndDisplayWeatherData(coords, locationName) {
     try {
         const startTime = performance.now();
-        
-        let url = '/api/openmeteo';
-        if (coords) {
-            url += `?lat=${coords.lat}&lon=${coords.lon}`;
-        }
+        const url = `/api/openmeteo?lat=${coords.lat}&lon=${coords.lon}`;
 
         const weatherResponse = await fetch(url);
         if (!weatherResponse.ok) throw new Error(`HTTP error! status: ${weatherResponse.status}`);
         
         const data = await weatherResponse.json();
-        
-        // If we don't have a location name yet, fetch it.
-        if (!locationName && coords) {
+
+        // If we don't have a location name from cache, fetch it.
+        if (!locationName) {
             try {
                 const geocodeResponse = await fetch(`/api/geocode?lat=${coords.lat}&lon=${coords.lon}`);
                 if (geocodeResponse.ok) {
                     const geocode = await geocodeResponse.json();
                     locationName = geocode.name;
+                    cacheLocation(coords, locationName); // Cache the location with its name
                 }
             } catch (geocodeError) {
                 console.error("Geocode fetch error:", geocodeError);
-                // Continue without a name, it will use the default.
             }
         }
 
-        updateOutdoorUI(data, locationName);
+        updateOutdoorUI(data, locationName || defaultCoords.name);
         
         elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
         showToast(`Outdoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
@@ -242,30 +256,30 @@ async function fetchAndDisplayWeatherData(coords, locationName) {
 
 async function fetchOutdoorData(forceRefresh = false) {
     if (forceRefresh) {
-        lastCoords = null; 
+        sessionStorage.removeItem('userLocation');
     }
 
-    if (lastCoords) {
-        // If we already have coordinates, just fetch the weather.
-        fetchAndDisplayWeatherData(lastCoords);
+    let cachedLocation = getCachedLocation();
+
+    if (cachedLocation) {
+        fetchAndDisplayWeatherData(cachedLocation, cachedLocation.name);
         return;
     }
 
-    // Try to get user location
     const userCoords = await getUserLocation();
     if (userCoords) {
-        lastCoords = userCoords;
+        // Fetch weather and location name for the first time
         fetchAndDisplayWeatherData(userCoords);
     } else {
-        // PERBAIKAN: Jika gagal, langsung panggil fetch dengan koordinat default (null)
-        lastCoords = { lat: -6.898, lon: 107.6349 }; // Set for future refreshes
-        fetchAndDisplayWeatherData(null, "Cikutra, Bandung");
+        // Fallback to default if location fails
+        cacheLocation(defaultCoords, defaultCoords.name);
+        fetchAndDisplayWeatherData(defaultCoords, defaultCoords.name);
     }
 }
 
 function updateOutdoorUI(data, locationName) {
     const { location, current, hourly, daily } = data;
-    elements.locationName.textContent = locationName || "Cikutra, Bandung";
+    elements.locationName.textContent = locationName;
     elements.locationDetails.textContent = `Timezone: ${location.timezone}`;
     
     const weatherInfo = getWeatherInfo(current.weather_code, current.time);
@@ -395,11 +409,12 @@ function switchTab(tab) {
         indoorDataInterval = setInterval(fetchIndoorData, 30000);
     } else {
         resetOutdoorUI();
-        fetchOutdoorData(true);
+        fetchOutdoorData(false); // Do not force refresh on simple tab switch
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    sessionStorage.removeItem('userLocation'); // Clear cache on initial load/refresh
     switchTab("indoor");
     setInterval(updateClock, 1000);
     updateClock();
