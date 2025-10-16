@@ -1,11 +1,8 @@
 const elements = {
-  // Tabs
   indoorTabButton: document.getElementById("indoor-tab-button"),
   outdoorTabButton: document.getElementById("outdoor-tab-button"),
   indoorContent: document.getElementById("indoor-content"),
   outdoorContent: document.getElementById("outdoor-content"),
-
-  // Indoor elements
   temperature: document.getElementById("temperature"),
   humidity: document.getElementById("humidity"),
   indoorPressure: document.querySelector("#indoor-content #pressure"),
@@ -21,8 +18,6 @@ const elements = {
     gasRaw: document.getElementById("gas-raw-bar"),
     gasCompensated: document.getElementById("gas-compensated-bar"),
   },
-
-  // Outdoor elements
   locationName: document.getElementById("location-name"),
   locationDetails: document.getElementById("location-details"),
   weatherIconContainer: document.getElementById("weather-icon-container"),
@@ -42,8 +37,6 @@ const elements = {
   windDirection: document.getElementById("wind-direction"),
   forecastContainer: document.getElementById("forecast-container"),
   dailyForecastContainer: document.getElementById("daily-forecast-container"),
-
-  // Common elements
   lastUpdated: document.getElementById("last-updated"),
   refreshButton: document.getElementById("refresh-button"),
   time: document.getElementById("time"),
@@ -56,7 +49,6 @@ let activeTab = "indoor";
 let indoorDataInterval;
 const defaultCoords = { lat: -6.898, lon: 107.6349, name: "Cikutra, Bandung" };
 
-// --- UTILITY & HELPER FUNCTIONS ---
 function formatNumber(value, decimals = 0) {
   const num = parseFloat(value);
   return isNaN(num) ? "--" : num.toFixed(decimals);
@@ -178,7 +170,6 @@ function updateIndoorStyles(data) {
     if (elements.airQualityStatus) elements.airQualityStatus.className = `text-2xl font-bold mt-2 ${textClasses[data.airQualityStatus] || "text-cyan-300"}`;
 }
 
-// --- OUTDOOR UI & DATA (WITH GEOLOCATION & CACHING) ---
 function getCachedLocation() {
     const cached = sessionStorage.getItem('userLocation');
     if (cached) {
@@ -240,14 +231,15 @@ async function fetchAndDisplayWeatherData(coords, locationName) {
         if (!weatherResponse.ok) throw new Error(`Weather API error! status: ${weatherResponse.status}`);
         const data = await weatherResponse.json();
 
-        // PERBAIKAN: Panggil API geocode dari browser
         if (!locationName && coords) {
             const geocodeUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coords.lat}&longitude=${coords.lon}&localityLanguage=en`;
             try {
                 const geocodeResponse = await fetch(geocodeUrl);
                 if (geocodeResponse.ok) {
                     const geocode = await geocodeResponse.json();
-                    locationName = `${geocode.locality}, ${geocode.principalSubdivision}`;
+                    const locality = geocode.locality || "Unknown Location";
+                    const city = geocode.city || geocode.principalSubdivision || "";
+                    locationName = city && city !== locality ? `${locality}, ${city}` : locality;
                     cacheLocation(coords, locationName);
                 }
             } catch (geocodeError) {

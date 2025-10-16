@@ -74,38 +74,5 @@ app.get("/api/openmeteo", async (req, res) => {
   }
 });
 
-// Endpoint for reverse geocoding
-app.get("/api/geocode", async (req, res) => {
-    const { lat, lon } = req.query;
-    if (!lat || !lon) {
-        return res.status(400).json({ error: "Latitude and Longitude are required" });
-    }
-    const geocodeURL = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
-    try {
-        const response = await fetch(geocodeURL); 
-        if (!response.ok) throw new Error(`Geocoding error: ${response.status}`);
-        const data = await response.json();
-        
-        // PERBAIKAN: Logika baru untuk format "Kecamatan/Kelurahan, Kota"
-        const locality = data.locality; // Ini adalah Kecamatan/Kelurahan, contoh: "Cibeunying Kidul"
-        const city = data.city;       // Ini adalah Kota, contoh: "Bandung"
-
-        let fullName = "Unknown Location";
-
-        if (city && locality && city !== locality) {
-            fullName = `${locality}, ${city}`; // Hasil: "Cibeunying Kidul, Bandung"
-        } else if (city) {
-            fullName = city; // Jika hanya kota yang tersedia
-        } else if (locality) {
-            fullName = locality; // Jika hanya kecamatan yang tersedia
-        }
-        
-        res.json({ name: fullName });
-
-    } catch (e) {
-        res.status(500).json({ error: e.message, details: "Failed to fetch location name" });
-    }
-});
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
