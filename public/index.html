@@ -24,7 +24,7 @@
       class="fixed top-0 left-0 right-0 bg-black bg-opacity-70 backdrop-filter backdrop-blur-lg z-50 flex justify-between items-center p-4 nav-glow"
     >
       <div class="flex items-center space-x-3">
-        <div class="status-indicator status-excellent animate-pulse"></div>
+        <div class="status-indicator status-excellent"></div>
         <h1
           class="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent font-['Orbitron'] tracking-wider"
         >
@@ -227,9 +227,9 @@
           <p class="text-gray-400 text-sm" id="location-details"></p>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8">
           <div
-            class="glass-card rounded-xl col-span-2 md:col-span-5 p-4 md:p-6"
+            class="glass-card rounded-xl col-span-2 md:col-span-3 p-4 md:p-6"
           >
             <div
               class="flex flex-col md:flex-row justify-between items-center h-full"
@@ -293,7 +293,7 @@
             </h2>
           </div>
 
-          <div class="outdoor-card glass-card col-span-2 md:col-span-3">
+          <div class="outdoor-card glass-card">
             <i
               class="fas fa-mountain text-cyan-300 text-2xl md:text-3xl mb-2"
             ></i>
@@ -331,6 +331,51 @@
             <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
               SEA-LEVEL
             </h2>
+          </div>
+
+          <div class="outdoor-card glass-card">
+            <i
+              class="fas fa-cloud-showers-heavy text-2xl md:text-3xl text-cyan-300 mb-2"
+            ></i>
+            <div class="flex items-baseline">
+              <p
+                id="precipitation"
+                class="data-value text-3xl md:text-4xl font-bold"
+              >
+                --
+              </p>
+              <span class="text-xs md:text-sm text-gray-300 ml-1">mm</span>
+            </div>
+            <h2 class="text-sm md:text-base font-medium text-gray-400 mt-2">
+              PRECIPITATION
+            </h2>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
+          <div
+            class="outdoor-card glass-card flex-row items-center justify-between p-4"
+          >
+            <div class="flex items-center">
+              <i class="fas fa-sun text-cyan-300 text-3xl mr-4"></i>
+              <div>
+                <h2 class="text-base font-medium text-gray-400">UV INDEX</h2>
+                <p id="uv-index-desc" class="text-lg font-bold">--</p>
+              </div>
+            </div>
+            <p id="uv-index" class="data-value text-4xl font-bold">--</p>
+          </div>
+          <div
+            class="outdoor-card glass-card flex-row items-center justify-between p-4"
+          >
+            <div class="flex items-center">
+              <i class="fas fa-smog text-cyan-300 text-3xl mr-4"></i>
+              <div>
+                <h2 class="text-base font-medium text-gray-400">AIR QUALITY</h2>
+                <p id="air-quality-desc" class="text-lg font-bold">--</p>
+              </div>
+            </div>
+            <p id="air-quality" class="data-value text-4xl font-bold">--</p>
           </div>
         </div>
 
