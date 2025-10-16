@@ -289,7 +289,6 @@ function updateOutdoorUI(data, locationName) {
     elements.weatherDescription.textContent = weatherInfo.description;
     elements.weatherIconContainer.innerHTML = `<i class="fas ${weatherInfo.icon} text-6xl md:text-7xl text-cyan-300"></i>`;
     
-    // PERBAIKAN: Menambahkan 1 angka desimal
     elements.outdoorTemperature.textContent = `${formatNumber(current.temperature_2m, 1)}°`;
     elements.apparentTemperature.textContent = `${formatNumber(current.apparent_temperature, 1)}°`;
     elements.outdoorHumidity.textContent = `${formatNumber(current.relative_humidity_2m, 1)}%`;
@@ -306,7 +305,7 @@ function updateOutdoorUI(data, locationName) {
     elements.uvIndex.className = `data-value text-4xl font-bold ${uvInfo.className}`;
 
     const aqiInfo = getAQIInfo(current.european_aqi);
-    elements.airQuality.textContent = formatNumber(current.european_aqi, 0); // AQI tetap integer
+    elements.airQuality.textContent = formatNumber(current.european_aqi, 0);
     elements.airQualityDesc.textContent = aqiInfo.text;
     elements.airQualityDesc.className = `text-lg font-bold ${aqiInfo.className}`;
     elements.airQuality.className = `data-value text-4xl font-bold ${aqiInfo.className}`;
@@ -323,8 +322,9 @@ function updateHourlyForecastUI(hourly) {
         elements.forecastContainer.innerHTML = `<p class="text-gray-400 w-full text-center">No future forecast data.</p>`;
         return;
     }
-    const next12Hours = hourly.time.slice(currentTimeIndex, currentTimeIndex + 12);
-    next12Hours.forEach((time, index) => {
+    // PERBAIKAN: Mengambil 24 jam ke depan
+    const next24Hours = hourly.time.slice(currentTimeIndex, currentTimeIndex + 24);
+    next24Hours.forEach((time, index) => {
         const i = currentTimeIndex + index;
         const weatherInfo = getWeatherInfo(hourly.weather_code[i], time);
         const forecastCard = `

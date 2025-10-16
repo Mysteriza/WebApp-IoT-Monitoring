@@ -80,16 +80,15 @@ app.get("/api/geocode", async (req, res) => {
     if (!lat || !lon) {
         return res.status(400).json({ error: "Latitude and Longitude are required" });
     }
-    // PERBAIKAN: Menggunakan API reverse geocoding dari bigdatacloud.com sebagai alternatif yang andal
-    const geocodeURL = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+    // PERBAIKAN: Menggunakan URL reverse geocoding yang benar dari Open-Meteo
+    const geocodeURL = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&format=json`;
     try {
         const response = await fetch(geocodeURL); 
         if (!response.ok) throw new Error(`Geocoding error: ${response.status}`);
         const data = await response.json();
         
-        // Membentuk nama lokasi dari data yang didapat
-        const locationName = data.locality || data.city || "Unknown Location";
-        const adminName = data.principalSubdivision || data.countryName || "";
+        const locationName = data.name || "Unknown Location";
+        const adminName = data.admin1 || data.country || "";
         
         res.json({ name: `${locationName}, ${adminName}` });
 
