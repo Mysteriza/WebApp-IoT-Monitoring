@@ -6,17 +6,12 @@ const elements = {
   temperature: document.getElementById("temperature"),
   humidity: document.getElementById("humidity"),
   indoorPressure: document.querySelector("#indoor-content #pressure"),
-  indoorAltitude: document.querySelector("#indoor-content #altitude"),
   gasRaw: document.getElementById("gas-raw"),
-  gasCompensated: document.getElementById("gas-compensated"),
-  airQualityStatus: document.getElementById("air-quality-status"),
   bars: {
     temp: document.getElementById("temp-bar"),
     humidity: document.getElementById("humidity-bar"),
     pressure: document.querySelector("#indoor-content #pressure-bar"),
-    altitude: document.querySelector("#indoor-content #altitude-bar"),
     gasRaw: document.getElementById("gas-raw-bar"),
-    gasCompensated: document.getElementById("gas-compensated-bar"),
   },
   locationName: document.getElementById("location-name"),
   locationDetails: document.getElementById("location-details"),
@@ -133,10 +128,7 @@ async function fetchIndoorData() {
         elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
         elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
         elements.indoorPressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
-        elements.indoorAltitude.textContent = `${formatNumber(data.altitude)} m`;
         elements.gasRaw.textContent = formatNumber(data.rawGas);
-        elements.gasCompensated.textContent = formatNumber(data.compensatedGas);
-        elements.airQualityStatus.textContent = data.airQualityStatus || "--";
         updateIndoorStyles(data);
         elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
         showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
@@ -160,16 +152,7 @@ function updateIndoorStyles(data) {
     const pressureRange = 1100 - 500;
     elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
     elements.indoorPressure.className = `data-value text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
-    elements.bars.altitude.style.width = `${Math.min(Math.max(data.indoorAltitude / 2000 * 100, 0), 100)}%`;
-    elements.indoorAltitude.className = `data-value text-4xl font-bold ${getStyleClass(data.indoorAltitude, [100, 500], ['altitude-low', 'altitude-medium', 'altitude-high'])}`;
     elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
-    elements.bars.gasCompensated.style.width = `${Math.min(Math.max((data.compensatedGas / 500) * 100, 0), 100)}%`;
-    const statusClasses = { "Very Good": "status-excellent", Good: "status-good", Fair: "status-fair", Poor: "status-poor", "Very Poor": "status-critical" };
-    const textClasses = { "Very Good": "text-green-400", Good: "text-cyan-300", Fair: "text-yellow-400", Poor: "text-orange-400", "Very Poor": "text-red-400" };
-    const statusClass = statusClasses[data.airQualityStatus] || "status-good";
-    const statusIndicator = document.querySelector("#indoor-content .status-indicator");
-    if (statusIndicator) statusIndicator.className = `status-indicator ml-3 ${statusClass}`;
-    if (elements.airQualityStatus) elements.airQualityStatus.className = `text-2xl font-bold mt-2 ${textClasses[data.airQualityStatus] || "text-cyan-300"}`;
 }
 
 function getCachedLocation() {
@@ -191,23 +174,19 @@ function getUserLocation() {
             resolve({ error: "Geolocation not supported." });
             return;
         }
-
         const handleSuccess = (position) => {
             resolve({ coords: { lat: position.coords.latitude, lon: position.coords.longitude } });
         };
-
         const handleError = (error) => {
             console.error("Geolocation Error:", error.code, error.message);
             resolve({ error });
         };
-        
         navigator.geolocation.getCurrentPosition(handleSuccess, handleError, {
             timeout: 15000,
             enableHighAccuracy: true,
         });
     });
 }
-
 
 async function fetchAndDisplayWeatherData(coords, locationName, isFallback = false) {
     try {

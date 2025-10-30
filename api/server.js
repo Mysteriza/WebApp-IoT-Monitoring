@@ -15,21 +15,36 @@ app.use(express.json());
 app.get("/api/blynk", async (_req, res) => {
   try {
     if (!TOKEN) throw new Error("BLYNK_AUTH_TOKEN is not defined");
-    const url = `https://${BLYNK_SERVER}/external/api/get?token=${TOKEN}&V0&V1&V5&V6&V7&V8&V9`;
+    
+    const url = `https://${BLYNK_SERVER}/external/api/get?token=${TOKEN}&V0&V1&V5&V8`;
+
     const r = await fetch(url, { agent });
     if (!r.ok) throw new Error(`Blynk get failed: ${r.status}`);
     const j = await r.json();
-    const parse = (x, f = 0) => (x === null || x === undefined || x === "null" || x === "undefined" || Number.isNaN(parseFloat(x))) ? f : parseFloat(x);
+
+    const parse = (x, f = 0) =>
+      x === null ||
+      x === undefined ||
+      x === "null" ||
+      x === "undefined" ||
+      Number.isNaN(parseFloat(x))
+        ? f
+        : parseFloat(x);
+
     const data = {
-      temperature: parse(j.V0), humidity: parse(j.V1), rawGas: parse(j.V5),
-      compensatedGas: parse(j.V6), airQualityStatus: j.V7 || "--",
-      pressure: parse(j.V8, 1013.25), altitude: parse(j.V9, 0),
+      temperature: parse(j.V0),
+      humidity: parse(j.V1),
+      rawGas: parse(j.V5),
+      pressure: parse(j.V8, 1013.25),
     };
+
     if (data.pressure < 800 || data.pressure > 1200) data.pressure = 1013.25;
-    if (data.altitude < -100 || data.altitude > 9000) data.altitude = 0;
+
     res.json(data);
   } catch (e) {
-    res.status(500).json({ error: e.message, details: "Failed to fetch sensor data" });
+    res
+      .status(500)
+      .json({ error: e.message, details: "Failed to fetch sensor data" });
   }
 });
 
@@ -73,6 +88,30 @@ app.get("/api/openmeteo", async (req, res) => {
     res.status(500).json({ error: e.message, details: "Failed to fetch weather data from Open-Meteo" });
   }
 });
+
+app.get("/api/geocode", async (req, res) => {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) {
+        return res.status(400).json({ error: "Latitude and Longitude are required" });
+    }
+    const geocodeURL = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+    try {
+        const response = await fetch(geocodeURL); 
+        if (!response.ok) throw new Error(`Geocoding error: ${response.status}`);
+        const data = await response.json();
+        
+        const locality = data.locality || "Unknown Location";
+        const city = data.city || data.principalSubdivision || "";
+        
+        const fullName = city && city !== locality ? `${locality}, ${city}` : locality;
+
+        res.json({ name: fullName });
+
+    } catch (e) {
+        res.status(500).json({ error: e.message, details: "Failed to fetch location name" });
+    }
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
