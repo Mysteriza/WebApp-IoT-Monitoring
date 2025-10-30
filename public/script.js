@@ -7,6 +7,7 @@ const elements = {
   humidity: document.getElementById("humidity"),
   indoorPressure: document.querySelector("#indoor-content #pressure"),
   gasRaw: document.getElementById("gas-raw"),
+  gasRawStatus: document.getElementById("gas-raw-status"),
   bars: {
     temp: document.getElementById("temp-bar"),
     humidity: document.getElementById("humidity-bar"),
@@ -125,10 +126,10 @@ async function fetchIndoorData() {
         const response = await fetch("/api/blynk");
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        elements.temperature.textContent = `${formatNumber(data.temperature, 1)} °C`;
-        elements.humidity.textContent = `${formatNumber(data.humidity, 1)} %`;
-        elements.indoorPressure.textContent = `${formatNumber(data.pressure, 1)} hPa`;
-        elements.gasRaw.textContent = formatNumber(data.rawGas);
+        elements.temperature.textContent = `${formatNumber(data.temperature, 2)} °C`;
+        elements.humidity.textContent = `${formatNumber(data.humidity, 2)} %`;
+        elements.indoorPressure.textContent = `${formatNumber(data.pressure, 2)} hPa`;
+        elements.gasRaw.textContent = formatNumber(data.rawGas, 0);
         updateIndoorStyles(data);
         elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
         showToast(`Indoor data loaded in ${Math.round(performance.now() - startTime)}ms`);
@@ -136,6 +137,13 @@ async function fetchIndoorData() {
         console.error("Fetch indoor error:", error);
         showToast("Failed to update indoor data", true, 5000);
     }
+}
+
+function getGasStatus(value) {
+    if (value < 300) return { text: "Fresh Air", className: "text-green-400" };
+    if (value <= 550) return { text: "Good", className: "text-cyan-300" };
+    if (value <= 700) return { text: "Moderate", className: "text-yellow-400" };
+    return { text: "Poor", className: "text-red-400" };
 }
 
 function updateIndoorStyles(data) {
@@ -153,6 +161,9 @@ function updateIndoorStyles(data) {
     elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
     elements.indoorPressure.className = `data-value text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
     elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
+    const gasStatus = getGasStatus(data.rawGas);
+    elements.gasRawStatus.textContent = gasStatus.text;
+    elements.gasRawStatus.className = `text-lg font-bold -mt-1 ${gasStatus.className}`;
 }
 
 function getCachedLocation() {
@@ -187,6 +198,7 @@ function getUserLocation() {
         });
     });
 }
+
 
 async function fetchAndDisplayWeatherData(coords, locationName, isFallback = false) {
     try {
@@ -243,11 +255,11 @@ async function fetchOutdoorData(forceRefresh = false) {
         fetchAndDisplayWeatherData(locationResult.coords);
     } else {
         let errorMessage = "Could not get location. Using default.";
-        if (locationResult.error.code === 1) {
+        if (locationResult.error?.code === 1) {
             errorMessage = "Location permission denied. Using default.";
-        } else if (locationResult.error.code === 2) {
+        } else if (locationResult.error?.code === 2) {
             errorMessage = "Location unavailable. Check GPS/network.";
-        } else if (locationResult.error.code === 3) {
+        } else if (locationResult.error?.code === 3) {
             errorMessage = "Location request timed out. Using default.";
         }
         showToast(errorMessage, true, 5000);
@@ -268,18 +280,17 @@ function updateOutdoorUI(data, locationName) {
     elements.weatherDescription.textContent = weatherInfo.description;
     elements.weatherIconContainer.innerHTML = `<i class="fas ${weatherInfo.icon} text-6xl md:text-7xl text-cyan-300"></i>`;
     
-    elements.outdoorTemperature.textContent = `${formatNumber(current.temperature_2m, 1)}°`;
-    elements.apparentTemperature.textContent = `${formatNumber(current.apparent_temperature, 1)}°`;
-    elements.outdoorHumidity.textContent = `${formatNumber(current.relative_humidity_2m, 1)}%`;
-    elements.surfacePressure.innerHTML = `${formatNumber(current.surface_pressure, 1)}<span class="text-lg">hPa</span>`;
-    elements.seaLevelPressure.innerHTML = `${formatNumber(current.pressure_msl, 1)}<span class="text-lg">hPa</span>`;
-    elements.outdoorAltitude.innerHTML = `${formatNumber(location.elevation, 1)}<span class="text-lg">m</span>`;
-    elements.windSpeed.textContent = formatNumber(current.wind_speed_10m, 1);
-    elements.windDirection.textContent = getWindDirection(current.wind_direction_10m);
-    elements.precipitation.textContent = formatNumber(current.precipitation, 1);
+    elements.outdoorTemperature.textContent = `${formatNumber(current.temperature_2m, 2)}°`;
+    elements.apparentTemperature.textContent = `${formatNumber(current.apparent_temperature, 2)}°`;
+    elements.outdoorHumidity.textContent = `${formatNumber(current.relative_humidity_2m, 2)}%`;
+    elements.surfacePressure.innerHTML = `${formatNumber(current.surface_pressure, 2)}<span class="text-lg">hPa</span>`;
+    elements.seaLevelPressure.innerHTML = `${formatNumber(current.pressure_msl, 2)}<span class="text-lg">hPa</span>`;
+    elements.outdoorAltitude.innerHTML = `${formatNumber(location.elevation, 2)}<span class="text-lg">m</span>`;
+    elements.windSpeed.textContent = formatNumber(current.wind_speed_10m, 2);
+    elements.precipitation.textContent = formatNumber(current.precipitation, 2);
 
     const uvInfo = getUVIndexInfo(current.uv_index);
-    elements.uvIndex.textContent = formatNumber(current.uv_index, 1);
+    elements.uvIndex.textContent = formatNumber(current.uv_index, 2);
     elements.uvIndexDesc.textContent = uvInfo.text;
     elements.uvIndexDesc.className = `text-lg font-bold ${uvInfo.className}`;
     elements.uvIndex.className = `data-value text-4xl font-bold ${uvInfo.className}`;
@@ -310,7 +321,7 @@ function updateHourlyForecastUI(hourly) {
             <div class="flex-shrink-0 text-center p-3 rounded-lg bg-white/5 w-28">
                 <p class="font-bold text-base">${new Date(time).toLocaleTimeString('en-US', { hour: '2-digit', hour12: false })}:00</p>
                 <i class="fas ${weatherInfo.icon} text-3xl text-cyan-300 my-2"></i>
-                <p class="font-bold text-lg">${formatNumber(hourly.temperature_2m[i], 1)}°C</p>
+                <p class="font-bold text-lg">${formatNumber(hourly.temperature_2m[i], 2)}°C</p>
                 <p class="text-xs text-gray-300 -mt-1 mb-1">${weatherInfo.description}</p>
                 <div class="flex items-center justify-center text-cyan-300">
                   <i class="fas fa-umbrella text-xs mr-1"></i>
@@ -350,8 +361,8 @@ function updateDailyForecastUI(daily) {
                      <span>${formatNumber(daily.precipitation_probability_max[i], 0)}%</span>
                 </div>
                 <p class="col-span-2 md:col-span-1 text-right font-medium">
-                    <span class="font-bold">${formatNumber(daily.temperature_2m_max[i], 1)}°</span>
-                    <span class="text-gray-400">/${formatNumber(daily.temperature_2m_min[i], 1)}°</span>
+                    <span class="font-bold">${formatNumber(daily.temperature_2m_max[i], 2)}°</span>
+                    <span class="text-gray-400">/${formatNumber(daily.temperature_2m_min[i], 2)}°</span>
                 </p>
             </div>
         `;
