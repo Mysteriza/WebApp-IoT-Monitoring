@@ -4,11 +4,8 @@ const elements = {
   indoorContent: document.getElementById("indoor-content"),
   outdoorContent: document.getElementById("outdoor-content"),
   temperature: document.getElementById("temperature"),
-  temperatureWrapper: document.getElementById("temperature-wrapper"),
   humidity: document.getElementById("humidity"),
-  humidityWrapper: document.getElementById("humidity-wrapper"),
   indoorPressure: document.querySelector("#indoor-content #pressure"),
-  pressureWrapper: document.getElementById("pressure-wrapper"),
   gasRaw: document.getElementById("gas-raw"),
   gasRawStatus: document.getElementById("gas-raw-status"),
   bars: {
@@ -132,9 +129,9 @@ async function fetchIndoorData() {
         const response = await fetch("/api/blynk");
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        elements.temperature.textContent = formatNumber(data.temperature, 2);
-        elements.humidity.textContent = formatNumber(data.humidity, 2);
-        elements.indoorPressure.textContent = formatNumber(data.pressure, 2);
+        elements.temperature.textContent = `${formatNumber(data.temperature, 2)} °C`;
+        elements.humidity.textContent = `${formatNumber(data.humidity, 2)} %`;
+        elements.indoorPressure.textContent = `${formatNumber(data.pressure, 2)} hPa`;
         elements.gasRaw.textContent = formatNumber(data.rawGas, 0);
         updateIndoorStyles(data);
         elements.lastUpdated.textContent = `Last Data Sync: ${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
@@ -160,14 +157,14 @@ function updateIndoorStyles(data) {
         return classes[classes.length - 1];
     };
     elements.bars.temp.style.width = `${Math.min(Math.max((data.temperature / 40) * 100, 0), 100)}%`;
-    elements.temperatureWrapper.className = `flex items-baseline ${getStyleClass(data.temperature, [20, 27, 30], ['temp-cold', 'temp-cool', 'temp-warm', 'temp-hot'])}`;
+    elements.temperature.className = `data-value text-3xl md:text-4xl font-bold ${getStyleClass(data.temperature, [20, 27, 30], ['temp-cold', 'temp-cool', 'temp-warm', 'temp-hot'])}`;
     
     elements.bars.humidity.style.width = `${Math.min(Math.max(data.humidity, 0), 100)}%`;
-    elements.humidityWrapper.className = `flex items-baseline ${getStyleClass(data.humidity, [30, 40, 60, 70], ['humidity-low', 'humidity-moderate', 'humidity-optimal', 'humidity-high', 'humidity-very-high'])}`;
+    elements.humidity.className = `data-value text-3xl md:text-4xl font-bold ${getStyleClass(data.humidity, [30, 40, 60, 70], ['humidity-low', 'humidity-moderate', 'humidity-optimal', 'humidity-high', 'humidity-very-high'])}`;
     
     const pressureRange = 1100 - 500;
     elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
-    elements.pressureWrapper.className = `flex items-baseline ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
+    elements.indoorPressure.className = `data-value text-3xl md:text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
     
     elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
     const gasStatus = getGasStatus(data.rawGas);
