@@ -97,8 +97,11 @@ function getWeatherInfo(code, dateStr) {
 }
 
 function getWindDirection(degrees) {
-    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-    return directions[Math.round(degrees / 22.5) % 16];
+  if (degrees === null || typeof degrees === "undefined" || isNaN(degrees)) {
+    return "--";
+  }
+  const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  return directions[Math.round(degrees / 22.5) % 16];
 }
 
 function getUVIndexInfo(uv) {
@@ -154,12 +157,12 @@ function updateIndoorStyles(data) {
         return classes[classes.length - 1];
     };
     elements.bars.temp.style.width = `${Math.min(Math.max((data.temperature / 40) * 100, 0), 100)}%`;
-    elements.temperature.className = `data-value text-4xl font-bold ${getStyleClass(data.temperature, [20, 27, 30], ['temp-cold', 'temp-cool', 'temp-warm', 'temp-hot'])}`;
+    elements.temperature.className = `data-value text-3xl md:text-4xl font-bold ${getStyleClass(data.temperature, [20, 27, 30], ['temp-cold', 'temp-cool', 'temp-warm', 'temp-hot'])}`;
     elements.bars.humidity.style.width = `${Math.min(Math.max(data.humidity, 0), 100)}%`;
-    elements.humidity.className = `data-value text-4xl font-bold ${getStyleClass(data.humidity, [30, 40, 60, 70], ['humidity-low', 'humidity-moderate', 'humidity-optimal', 'humidity-high', 'humidity-very-high'])}`;
+    elements.humidity.className = `data-value text-3xl md:text-4xl font-bold ${getStyleClass(data.humidity, [30, 40, 60, 70], ['humidity-low', 'humidity-moderate', 'humidity-optimal', 'humidity-high', 'humidity-very-high'])}`;
     const pressureRange = 1100 - 500;
     elements.bars.pressure.style.width = `${Math.min(Math.max(((data.pressure - 500) / pressureRange) * 100, 0), 100)}%`;
-    elements.indoorPressure.className = `data-value text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
+    elements.indoorPressure.className = `data-value text-3xl md:text-4xl font-bold ${getStyleClass(data.pressure, [980, 1020], ['pressure-low', 'pressure-normal', 'pressure-high'])}`;
     elements.bars.gasRaw.style.width = `${Math.min(Math.max((data.rawGas / 1023) * 100, 0), 100)}%`;
     const gasStatus = getGasStatus(data.rawGas);
     elements.gasRawStatus.textContent = gasStatus.text;
@@ -287,6 +290,7 @@ function updateOutdoorUI(data, locationName) {
     elements.seaLevelPressure.innerHTML = `${formatNumber(current.pressure_msl, 2)}<span class="text-lg">hPa</span>`;
     elements.outdoorAltitude.innerHTML = `${formatNumber(location.elevation, 2)}<span class="text-lg">m</span>`;
     elements.windSpeed.textContent = formatNumber(current.wind_speed_10m, 2);
+    elements.windDirection.textContent = getWindDirection(current.wind_direction_10m);
     elements.precipitation.textContent = formatNumber(current.precipitation, 2);
 
     const uvInfo = getUVIndexInfo(current.uv_index);
